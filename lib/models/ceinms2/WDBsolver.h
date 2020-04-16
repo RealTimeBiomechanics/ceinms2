@@ -25,32 +25,32 @@
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
- 
+
 #ifndef WDBsolver_h
 #define WDBsolver_h
 
 #include <limits>
 #include <math.h>
 
-template <typename T> int sgn(T val) {
+template<typename T>
+int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-template <typename T>
-T sign(const T& a, const T& b) {
-
-        return sgn(b)*fabs(a);
+template<typename T>
+T sign(const T &a, const T &b) {
+    return sgn(b) * fabs(a);
 }
 
-template <typename T>
+template<typename T>
 double wdbSolve(T &func, double x1, double x2, double tol) {
     const int ITMAX = 100;
     constexpr double EPS = std::numeric_limits<double>::epsilon();
 
-    double a = x1, b = x2, c = x2, 
-        d = std::numeric_limits<double>::max(), 
-        e = std::numeric_limits<double>::max(), 
-        fa = func(a), fb = func(b), fc, p, q, r, s, tol1, xm;
+    double a = x1, b = x2, c = x2,
+           d = std::numeric_limits<double>::max(),
+           e = std::numeric_limits<double>::max(),
+           fa = func(a), fb = func(b), fc, p, q, r, s, tol1, xm;
     if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0))
         throw("Root must be bracketed in wdbSolve");
     fc = fb;

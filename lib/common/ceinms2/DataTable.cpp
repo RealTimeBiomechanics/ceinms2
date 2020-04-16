@@ -37,7 +37,9 @@
 namespace ceinms {
 
 template<typename T>
-DataTable<T>::DataTable() : nRows_(0), nCols_(0) {}
+DataTable<T>::DataTable()
+    : nRows_(0)
+    , nCols_(0) {}
 
 template<typename T>
 DataTable<T>::DataTable(size_t nRows, size_t nCols)

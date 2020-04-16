@@ -6,7 +6,7 @@
 #include <cmath>
 
 using DoubleT = double;
-using CurveOffline = ceinms::Curve<ceinms::CurveMode::Offline, ceinms::CurveMode::Interpolation::Cubic> ;
+using CurveOffline = ceinms::Curve<ceinms::CurveMode::Offline, ceinms::CurveMode::Interpolation::Cubic>;
 namespace ceinms {
 
 class Lloyd2019Muscle {
