@@ -1,0 +1,3 @@
+add_executable(testMuscleModel mainTestMuscleModel.cpp)
+target_link_libraries(testMuscleModel PRIVATE models)
+ 
