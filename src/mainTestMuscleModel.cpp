@@ -1,22 +1,25 @@
-#include "Lloyd2019Activation.h"
-#include "Lloyd2019Muscle.h"
+#include "ceinms2/Lloyd2019Activation.h"
+#include "ceinms2/Lloyd2019Muscle.h"
+#include "ceinms2/Curve.h"
+#include "ceinms2/DataTable.h"
+#include <cmath>
 #include <vector>
 #include <fstream>
-#include <autodiff/forward.hpp>
-#include <armadillo>
-using namespace std;
-using namespace autodiff;
-#include <ceinms/Curve.h>
 #include <filesystem>
-#include "ceinms/DataTable.h"
-#include <cmath>
+#include <map>
+#include <algorithm>
+using std::cout;
+using std::endl;
+using std::vector;
+using std::string;
 
+constexpr double pi = 3.14159265358979323846;
 
-std::vector<std::string> tokenize(const std::string& line, char sep = ',') {
+vector<string> tokenize(const string& line, char sep = ',') {
 
-	std::vector<std::string> result;
-	std::size_t first(0), last(0);
-	if (line.find(sep) == std::string::npos)
+	vector<string> result;
+	size_t first(0), last(0);
+	if (line.find(sep) == string::npos)
 		result.emplace_back(line);
 	else {
 		while (last < line.size()) {
@@ -38,7 +41,7 @@ std::vector<std::string> tokenize(const std::string& line, char sep = ',') {
 }
 
 template<typename T>
-static ceinms::DataTable<T> fillFromCSV(const std::string filename, const char sep = ',', unsigned skiprows = 0) {
+static ceinms::DataTable<T> fillFromCSV(const string filename, const char sep = ',', unsigned skiprows = 0) {
 	ceinms::DataTable<T> data;
 	std::ifstream inF(filename);
 	if (!inF.is_open()) {
@@ -46,23 +49,20 @@ static ceinms::DataTable<T> fillFromCSV(const std::string filename, const char s
 		exit(EXIT_FAILURE);
 	}
 
-	std::string line;
-	for (int i = 0; i < skiprows; ++i)
+	string line;
+	for (unsigned i = 0; i < skiprows; ++i)
 		getline(inF, line, '\n');
 	getline(inF, line, '\n');
 	auto labels(tokenize(line, sep));
-	data.setLabels(std::vector<std::string>(labels.begin() + 1, labels.end()));
+	data.setLabels(vector<string>(labels.begin() + 1, labels.end()));
 
 	while (!inF.eof()) {
 		getline(inF, line);
 		if (!line.empty()) {
-			std::vector<std::string> result(tokenize(line, sep));
-			std::vector<T> values;
+			vector<string> result(tokenize(line, sep));
+			vector<T> values;
 			std::transform(std::begin(result), std::end(result), std::back_inserter(values), [](std::string v) {
-				std::stringstream ss(v);
-				T num;
-				ss >> num;
-				return num;
+				return std::stod(v);
 			});
 			data.pushRow(values.at(0), std::vector<T>(values.begin() + 1, values.end()));
 		}
@@ -108,7 +108,7 @@ void printStates(ceinms::Lloyd2019Muscle& muscle) {
 
 void printSolutionSpace(ceinms::Lloyd2019Muscle& muscle) {
 
-	ofstream outF("outSolutionSpace.csv");
+	std::ofstream outF("outSolutionSpace.csv");
 	DoubleT flStart = 0.5, flStop = 1.5, fvStart = -1, fvStop = 1;
 	const unsigned N = 100;
 	DoubleT dFl = (flStop - flStart) / N;
@@ -130,7 +130,7 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle& muscle) {
 
 void printStep(ceinms::Lloyd2019Muscle& muscle) {
 
-	ofstream outF("outStepResponse.csv");
+	std::ofstream outF("outStepResponse.csv");
 	DoubleT mtuLStart = 2.1, mtuLStop = 2.3, activation = 0.5;
 	muscle.setInput(activation, mtuLStart);
 	muscle.equilibrate();
@@ -149,7 +149,6 @@ void printStep(ceinms::Lloyd2019Muscle& muscle) {
 		muscle.calculateOutput();
 		outF << muscle.updOutput().fibreForce << ", " << muscle.updOutput().normalisedFibreLength << endl;
 	}
-
 }
 
 /*
@@ -206,13 +205,12 @@ int main_() {
 	printSolutionSpace(muscle);
 	printStep(muscle);
 
-
 	return 0;
 }
 
 
 int main_1() {
-
+  /*
 	using DoubleT = dual;
 	DoubleT a = 1;
 	a = a - 2*a;
@@ -241,7 +239,7 @@ int main_1() {
 	a = 1;
 	a = DoubleT{ 2 * a - a };
 	cout << "it's " << a << " should be 1\n";
-	   	 
+	 */  	 
 	return 0;
 }
 
@@ -269,7 +267,7 @@ void runTrial(ceinms::DataTable<double>& trial) {
 	p.maxContractionVelocity = 5.3156293513;
 	p.maxIsometricForce = 1.2758948506;
 	p.optimalFibreLength = 17.1e-3; //m;
-	p.pennationAngleAtOptimalFibreLength = 6.0*(M_PI / 180.0); //rad
+    p.pennationAngleAtOptimalFibreLength = 6.0 * (pi / 180.0);//rad
 	p.percentageChange = 0.15;
 	p.strengthCoefficient = 1;
 	p.tendonSlackLength = p.optimalFibreLength;
@@ -283,9 +281,9 @@ void runTrial(ceinms::DataTable<double>& trial) {
 	ceinms::Lloyd2019Muscle muscle(p);
 
 	auto times = trial.getTimeColumn();
-	auto displacements = trial.getColumn("displacement");
-	std::vector<DoubleT> outForce;
-	for (int i{ 0 }; i < times.size();++i) {
+	auto displacements = trial.getColumn("Experimental_displacement_mm");
+	vector<DoubleT> outForce;
+	for (size_t i{ 0 }; i < times.size();++i) {
 		DoubleT disp = displacements.at(i);
 		DoubleT dt = 0.001;
 		if(i  > 0)
@@ -300,38 +298,36 @@ void runTrial(ceinms::DataTable<double>& trial) {
 		muscle.calculateOutput();
 		outForce.push_back(muscle.updOutput().tendonForce);
 	}
-	trial.pushColumn("outputForce", outForce);
+	trial.pushColumn("Predicted_Force_N", outForce);
 }
 
 void runMillardBenchmark() {
+    std::filesystem::path root(ROOT_DIR);
+    std::filesystem::path dataPath{ root / std::filesystem::path("data/millard2013/maximalActivation") };
+    const std::map<std::string, double> trialToDisplacement{
+        { "force_trial1.dat", 0.05 },
+        { "force_trial2.dat", 0.1 },
+        { "force_trial3.dat", 0.25 },
+        { "force_trial4.dat", 0.5 },
+        { "force_trial5.dat", 1.0 },
+        { "force_trial6.dat", 2.0 },
+    };
+    auto normalisedDisplacementDataTable = fillFromCSV<double>((dataPath / "displacement.dat").string(), '\t', 15);
+    auto normalisedDisplacement = normalisedDisplacementDataTable.getColumn("displacement_mm");
+    auto times = normalisedDisplacementDataTable.getTimeColumn();
+    CurveOffline displacementCurve{ times, normalisedDisplacement };
 
-	std::filesystem::path dataPath{ R"(C:\Users\s2849511\coding\versioning\ceinms\src\sandbox\maximalActivation)" };
-	const std::map<std::string, double> trialToDisplacement{
-		{"force_trial1.dat", 0.05},
-		{"force_trial2.dat", 0.1},
-		{"force_trial3.dat", 0.25},
-		{"force_trial4.dat", 0.5},
-		{"force_trial5.dat", 1.0},
-		{"force_trial6.dat", 2.0},
-	};
-	auto normalisedDisplacementDataTable = fillFromCSV<double>((dataPath / "displacement.dat").string(), '\t', 15);
-	auto normalisedDisplacement = normalisedDisplacementDataTable.getColumn("displacement_mm");
-	auto times = normalisedDisplacementDataTable.getTimeColumn();
-	CurveOffline displacementCurve{ times, normalisedDisplacement };
-
-	for (auto& [trialName, disp] : trialToDisplacement) {
-		auto currentTrial = fillFromCSV<double>((dataPath / trialName).string(), '\t', 15);
-		std::vector<double> currentDisplacementData;
-		for (auto& t : currentTrial.getTimeColumn())
-			currentDisplacementData.emplace_back(displacementCurve.getValue(t)*disp);
-		currentTrial.pushColumn("displacement", currentDisplacementData);
-		runTrial(currentTrial);
-		currentTrial.print((dataPath / ("out" + trialName)).string());
-	}
-
+    for (auto &[trialName, disp] : trialToDisplacement) {
+        auto currentTrial = fillFromCSV<double>((dataPath / trialName).string(), '\t', 15);
+        currentTrial.setLabels({ "Experimental_Force_N" });
+        std::vector<double> currentDisplacementData;
+        for (auto &t : currentTrial.getTimeColumn())
+            currentDisplacementData.emplace_back(displacementCurve.getValue(t) * disp);
+        currentTrial.pushColumn("Experimental_displacement_mm", currentDisplacementData);
+        runTrial(currentTrial);
+        currentTrial.print("out" + trialName);
+    }
 }
-
-
 
 int main() {
 
