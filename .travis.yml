@@ -17,7 +17,7 @@ install:
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/ctest /home/travis/bin/ctest
 
 script:
-  - CXX=/usr/bin/gcc-10 CC=/usr/bin/g++-10 cmake -D ENABLE_COVERAGE:BOOL=TRUE . 
+  - CXX=/usr/bin/gcc-9 CC=/usr/bin/g++-9 cmake -D ENABLE_COVERAGE:BOOL=TRUE . 
   - cmake --build . -- -j2 
   - ctest -j2
   - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-5
