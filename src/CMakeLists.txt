@@ -1,2 +1,2 @@
 add_executable(testMuscleModel mainTestMuscleModel.cpp)
-target_link_libraries(testMuscleModel models project_options project_warnings )
+target_link_libraries(testMuscleModel modeling project_options project_warnings )

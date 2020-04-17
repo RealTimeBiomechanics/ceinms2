@@ -1,4 +1,4 @@
-#include "ceinms2/Lloyd2019Activation.h"
+#include "ceinms2/ExponentialActivation.h"
 #include "ceinms2/Lloyd2019Muscle.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/DataTable.h"
@@ -14,7 +14,7 @@ using std::vector;
 using std::string;
 
 constexpr double pi = 3.14159265358979323846;
-
+using DoubleT = double;
 vector<string> tokenize(const string &line, char sep = ',') {
     vector<string> result;
     size_t first(0), last(0);
@@ -71,24 +71,24 @@ static ceinms::DataTable<T> fillFromCSV(const string filename, const char sep = 
 void printStates(ceinms::Lloyd2019Muscle& muscle) {
 
 	ofstream outF("out.csv");
-	outF << "calcFibreForce, activation, activeForce, dampingForce, fibreForce,fibreLength, musculotendonLength,"
-		"normalisedFibreLength, normalisedFibreLengthAtT, normalisedFibreVelocity, optimalFibreLengthAtT,"
+	outF << "calcFiberForce, activation, activeForce, dampingForce, fiberForce,fiberLength, musculotendonLength,"
+		"normalisedFiberLength, normalisedFiberLengthAtT, normalisedFiberVelocity, optimalFiberLengthAtT,"
 		"passiveForce, pennationAngle, tendonLength, tendonStrain, fa, fv, fp" << endl;
 	DoubleT flStart = 0.1, flStop = 1.9;
 	const unsigned N = 100;
 	DoubleT dx = (flStop - flStart) / N;
 	for (int i{ 0 }; i < N; ++i) {
-		outF << muscle.calculateFibreForce(1., (i+1)*dx, 0.) << ", ";
+		outF << muscle.calculateFiberForce(1., (i+1)*dx, 0.) << ", ";
 		outF << muscle.updStates().activation << ", ";
 		outF << muscle.updStates().activeForce << ", ";
 		outF << muscle.updStates().dampingForce << ", ";
-		outF << muscle.updStates().fibreForce << ", ";
-		outF << muscle.updStates().fibreLength << ", ";
+		outF << muscle.updStates().fiberForce << ", ";
+		outF << muscle.updStates().fiberLength << ", ";
 		outF << muscle.updStates().musculotendonLength << ", ";
-		outF << muscle.updStates().normalisedFibreLength << ", ";
-		outF << muscle.updStates().normalisedFibreLengthAtT << ", ";
-		outF << muscle.updStates().normalisedFibreVelocity << ", ";
-		outF << muscle.updStates().optimalFibreLengthAtT << ", ";
+		outF << muscle.updStates().normalisedFiberLength << ", ";
+		outF << muscle.updStates().normalisedFiberLengthAtT << ", ";
+		outF << muscle.updStates().normalisedFiberVelocity << ", ";
+		outF << muscle.updStates().optimalFiberLengthAtT << ", ";
 		outF << muscle.updStates().passiveForce << ", ";
 		outF << muscle.updStates().pennationAngle << ", ";
 		outF << muscle.updStates().tendonLength << ", ";
@@ -113,7 +113,7 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
         for (int iFv(0); iFv < N; ++iFv) {
             DoubleT fl = flStart + dFl * iFl;
             DoubleT fv = fvStart + dFv * iFv;
-            DoubleT u = muscle.calculateFibreForce(1., fl, fv, muscle.updParameters());
+            DoubleT u = muscle.calculateFiberForce(1., fl, fv, muscle.updParameters());
             DoubleT t = muscle.calculateTendonForce(2, fl, muscle.updParameters());
             outF << fl << ", ";
             outF << fv << ", ";
@@ -133,7 +133,7 @@ void printStep(ceinms::Lloyd2019Muscle &muscle) {
         muscle.integrate(0.001);
         muscle.validateState();
         muscle.calculateOutput();
-        outF << muscle.updOutput().fibreForce << ", " << muscle.updOutput().normalisedFibreLength << endl;
+        outF << muscle.getOutput().fiberForce << ", " << muscle.getOutput().normalisedFiberLength << endl;
     }
 
     for (int i{ 0 }; i < 100; ++i) {
@@ -141,7 +141,7 @@ void printStep(ceinms::Lloyd2019Muscle &muscle) {
         muscle.integrate(0.001);
         muscle.validateState();
         muscle.calculateOutput();
-        outF << muscle.updOutput().fibreForce << ", " << muscle.updOutput().normalisedFibreLength << endl;
+        outF << muscle.getOutput().fiberForce << ", " << muscle.getOutput().normalisedFiberLength << endl;
     }
 }
 
@@ -150,14 +150,14 @@ void testAutoDiff(ceinms::Lloyd2019Muscle& muscle) {
 	dual a = 1.;
 	dual fl = 1.;
 	dual fv = 0;
-	dual u = muscle.calculateFibreForce(1, 1, 0);
+	dual u = muscle.calculateFiberForce(1, 1, 0);
 	cout << u << endl;
-	dual dudfl = derivative([&](auto x1, auto x2, auto x3) {return muscle.calculateFibreForce(x1, x2, x3); }, wrt(fl), a, fl, fv);
+	dual dudfl = derivative([&](auto x1, auto x2, auto x3) {return muscle.calculateFiberForce(x1, x2, x3); }, wrt(fl), a, fl, fv);
 	cout << "automatic derivative: " << dudfl << endl;
 
 	dual dx = 0.0001;
-	dual d1 = muscle.calculateFibreForce(1, 1 + dx, 0);
-	dual d2 = muscle.calculateFibreForce(1, 1 - dx, 0);
+	dual d1 = muscle.calculateFiberForce(1, 1 + dx, 0);
+	dual d2 = muscle.calculateFiberForce(1, 1 - dx, 0);
 	dual diff = (d1 - d2) / (2 * dx);
 	cout << "Numeric differentiation: " << diff << endl;
 }
@@ -185,8 +185,8 @@ int main_() {
     p.damping = 0.1;
     p.maxContractionVelocity = 1;
     p.maxIsometricForce = 1;
-    p.optimalFibreLength = 1;
-    p.pennationAngleAtOptimalFibreLength = 0;
+    p.optimalFiberLength = 1;
+    p.pennationAngleAtOptimalFiberLength = 0;
     p.percentageChange = 0.15;
     p.strengthCoefficient = 1;
     p.tendonSlackLength = 1;
@@ -260,17 +260,17 @@ void runTrial(ceinms::DataTable<double> &trial) {
     p.damping = 0.1;
     p.maxContractionVelocity = 5.3156293513;
     p.maxIsometricForce = 1.2758948506;
-    p.optimalFibreLength = 17.1e-3;//m;
-    p.pennationAngleAtOptimalFibreLength = 6.0 * (pi / 180.0);//rad
+    p.optimalFiberLength = 17.1e-3;//m;
+    p.pennationAngleAtOptimalFiberLength = 6.0 * (pi / 180.0);//rad
     p.percentageChange = 0.15;
     p.strengthCoefficient = 1;
-    p.tendonSlackLength = p.optimalFibreLength;
+    p.tendonSlackLength = p.optimalFiberLength;
     p.activeForceLengthCurve = act;
     p.passiveForceLengthCurve = pas;
     p.forceVelocityCurve = vel;
     p.tendonForceStrainCurve = ten;
 
-    DoubleT muscleRestLength = p.optimalFibreLength * std::cos(p.pennationAngleAtOptimalFibreLength) + p.tendonSlackLength;
+    DoubleT muscleRestLength = p.optimalFiberLength * std::cos(p.pennationAngleAtOptimalFiberLength) + p.tendonSlackLength;
     DoubleT posOffset = -2.0e-3;//m
     ceinms::Lloyd2019Muscle muscle(p);
 
@@ -289,7 +289,7 @@ void runTrial(ceinms::DataTable<double> &trial) {
         muscle.integrate(dt);
         muscle.validateState();
         muscle.calculateOutput();
-        outForce.push_back(muscle.updOutput().tendonForce);
+        outForce.push_back(muscle.getOutput().tendonForce);
     }
     trial.pushColumn("Predicted_Force_N", outForce);
 }
