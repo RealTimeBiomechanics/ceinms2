@@ -47,7 +47,7 @@ namespace CurveMode {
         Offline };
     enum Interpolation { Cubic,
         Linear };
-};// namespace CurveMode
+}// namespace CurveMode
 
 template<int v>
 struct Int2Type {

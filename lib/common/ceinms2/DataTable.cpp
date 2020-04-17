@@ -294,7 +294,7 @@ std::ostream &operator<<(std::ostream &out, const DataTable<T> &rhs) {
     for (auto &l : rhs.labels_)
         out << l << "\t";
     out << std::endl;
-    for (auto i(0); i < rhs.nRows_; ++i) {
+    for (size_t i(0); i < rhs.nRows_; ++i) {
         out << rhs.time_.at(i) << "\t";
         for (auto &e : rhs.data_.at(i))
             out << e << "\t";

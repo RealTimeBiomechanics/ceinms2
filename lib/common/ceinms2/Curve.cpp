@@ -68,7 +68,7 @@ Curve<mode, T, N>::Curve(const Curve<mode, T, N> &orig) {
     b_ = orig.b_;
     c_ = orig.c_;
     d_ = orig.d_;
-};
+}
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>

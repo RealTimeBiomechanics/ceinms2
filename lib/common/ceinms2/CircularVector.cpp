@@ -163,5 +163,5 @@ bool CircularVector<T, N>::isEmpty() {
 template<typename T, size_t N>
 bool CircularVector<T, N>::empty() const {
     return size() == 0;
-};
+}
 }// namespace ceinms

@@ -109,8 +109,8 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
     const unsigned N = 100;
     DoubleT dFl = (flStop - flStart) / N;
     DoubleT dFv = (fvStop - fvStart) / N;
-    for (int iFl(0); iFl < N; ++iFl)
-        for (int iFv(0); iFv < N; ++iFv) {
+    for (unsigned iFl(0); iFl < N; ++iFl)
+        for (unsigned iFv(0); iFv < N; ++iFv) {
             DoubleT fl = flStart + dFl * iFl;
             DoubleT fv = fvStart + dFv * iFv;
             DoubleT u = muscle.calculateFiberForce(1., fl, fv, muscle.updParameters());
@@ -119,7 +119,7 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
             outF << fv << ", ";
             outF << u << ", ";
             outF << t << ", ";
-            outF << DoubleT(u - t) << endl;
+            outF << u - t << endl;
         }
 }
 
