@@ -1,12 +1,9 @@
 language: cpp
 dist: bionic
-osx_image: xcode10.3
 compiler:
 - gcc
-- clang
 os:
 - linux
-- osx
 
 addons:
   apt:
@@ -17,16 +14,8 @@ addons:
     packages:
     - clang-9
     - cmake
-    - gcc-9
-    - g++-9
-    - ninja-build
     - doxygen
-  homebrew:
-    packages:
-    - cmake
-    - gcc@9
-    - llvm@9
-    - ninja
+    - gcc-snapshot
     update: true
     
 install:
@@ -34,14 +23,8 @@ install:
   - tar -xf cmake-3.15.0-rc3-Linux-x86_64.tar.gz
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/cmake /home/travis/bin/cmake
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/ctest /home/travis/bin/ctest
-
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-      export PATH="$(brew --prefix llvm)/bin:$PATH";
-    fi
+ 
   - if [ "$CXX" = "g++" ]; then export CXX="g++-9" CC="gcc-9"; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    if [ "$CXX" = "clang++" ]; then export CXX="clang++-9" CC="clang-9"; fi;
-    fi
   - echo ${CC}
   - echo ${CXX}
   - ${CXX} --version
