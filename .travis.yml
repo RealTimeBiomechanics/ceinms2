@@ -15,7 +15,8 @@ addons:
     - clang-9
     - cmake
     - doxygen
-    - gcc-snapshot
+    - libstdc++-9-dev
+    - gcc-9 
     update: true
     
 install:
@@ -24,7 +25,7 @@ install:
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/cmake /home/travis/bin/cmake
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/ctest /home/travis/bin/ctest
  
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-8" CC="gcc-8"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-9" CC="gcc-9"; fi
   - echo ${CC}
   - echo ${CXX}
   - ${CXX} --version
