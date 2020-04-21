@@ -13,6 +13,10 @@ using std::endl;
 using std::vector;
 using std::string;
 
+/*
+This should become a test to assess RMSE of the model
+*/
+
 constexpr double pi = 3.14159265358979323846;
 using DoubleT = double;
 vector<string> tokenize(const string &line, char sep = ',') {

@@ -12,13 +12,24 @@ class Lloyd2019Muscle {
   public:  
 
     struct Parameters {
+        Parameters()
+            : optimalFiberLength(1.)
+            , pennationAngleAtOptimalFiberLength(0.)
+            , tendonSlackLength(0.8)
+            , maxContractionVelocity(5.)
+            , damping(0.1)
+            , maxIsometricForce(100.)
+            , strengthCoefficient(1.)
+            , percentageChange(0.15) {}
+
+
         DoubleT optimalFiberLength;
         DoubleT pennationAngleAtOptimalFiberLength;
         DoubleT tendonSlackLength;
         DoubleT maxContractionVelocity;
+        DoubleT damping;
         DoubleT maxIsometricForce;
         DoubleT strengthCoefficient;
-        DoubleT damping;
         DoubleT percentageChange;
         CurveOffline forceVelocityCurve;
         CurveOffline activeForceLengthCurve;
@@ -84,8 +95,9 @@ class Lloyd2019Muscle {
         s_.fiberLength = p_.optimalFiberLength;
         s_.fiberVelocity = 0.;
     }
-    /* calculateXYZ functions perform calculations and return the calculated value*/
-    void setInput(DoubleT activation, DoubleT musculotendonLength);
+
+    void setActivation(DoubleT activation);
+    void setMusculotendonLength(DoubleT musculotendonLength);
     void setInput(Input input);
     void equilibrate();
     void setState(State state);
@@ -95,6 +107,10 @@ class Lloyd2019Muscle {
     void validateState();
     //from the internal state of the system and the input, calculate all the output;
     void calculateOutput();
+    std::string getName() const { return name_; }
+    void setName(std::string name) { name_ = name; }
+    //Convenience function that, from input and current state, calculate the new state and all the output
+    DoubleT evaluate(DoubleT dt);
 
     Parameters &updParameters() { return p_; }
     Parameters getParameters() { return p_; }
@@ -102,6 +118,7 @@ class Lloyd2019Muscle {
     State getState() { return s_; }
     Output getOutput() { return o_; }
 
+    /* calculateXYZ functions perform calculations and return the calculated value*/
     static DoubleT calculateFiberVelocityFromFiberLength(DoubleT previousFiberLength, DoubleT currentFiberLength, DoubleT dt);
     static DoubleT calculateFiberForce(DoubleT activation, DoubleT fiberLength, DoubleT fiberVelocity, const Parameters &p);
     static DoubleT calculateTendonForce(DoubleT musculotendonLength, DoubleT fiberLength, const Parameters &p);
@@ -115,16 +132,21 @@ class Lloyd2019Muscle {
 
   private:
     DoubleT integrateFiberLength(DoubleT dt);
+    std::string name_;
     Parameters p_;
     State s_, sNew_;
     Input i_;
     Output o_;
 };
 
-void Lloyd2019Muscle::setInput(DoubleT activation, DoubleT musculotendonLength) {
+void Lloyd2019Muscle::setActivation(DoubleT activation) {
     i_.activation = activation;
+}
+
+void Lloyd2019Muscle::setMusculotendonLength(DoubleT musculotendonLength) {
     i_.musculotendonLength = musculotendonLength;
 }
+
 
 void Lloyd2019Muscle::setInput(Input input) {
     i_ = input;
@@ -137,7 +159,7 @@ void Lloyd2019Muscle::equilibrate() {
     double tol = 1e-9;
     while (diff > tol) {
         integrate(0.001);
-        diff = std::fabs(sNew_.fiberLength - fLength);
+        diff = std::abs(sNew_.fiberLength - fLength);
         fLength = sNew_.fiberLength;
     }
     validateState();
@@ -167,6 +189,13 @@ void Lloyd2019Muscle::calculateOutput() {
     o_.tendonStrain = calculateTendonStrain(i_.musculotendonLength, s_.fiberLength, p_);
     o_.tendonLength = calculateTendonLength(i_.musculotendonLength, s_.fiberLength, p_);
     o_.tendonForce = calculateTendonForce(i_.musculotendonLength, s_.fiberLength, p_);
+}
+
+DoubleT Lloyd2019Muscle::evaluate(DoubleT dt) {
+    integrate(dt);
+    validateState();
+    calculateOutput();
+    return o_.fiberForce;
 }
 
 DoubleT Lloyd2019Muscle::calculateFiberVelocityFromFiberLength(DoubleT previousFiberLength, DoubleT currentFiberLength, DoubleT dt) {
