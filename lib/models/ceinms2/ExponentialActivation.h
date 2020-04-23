@@ -2,11 +2,13 @@
 #define ceinms2_ExponentialActivation_h
 #include <cmath>
 #include <algorithm>
+#include <type_traits>
 
 namespace ceinms {
 
 class ExponentialActivation {
   public:
+    using type = nullptr_t;
     using DoubleT = double;
     struct Parameters {
         Parameters()
@@ -38,11 +40,10 @@ class ExponentialActivation {
         Output()
             : activation(0.) {}
         DoubleT activation;
+        DoubleT getPrimary() const { return activation; }
     };
 
-    ExponentialActivation() {
-        updateCoefficients();
-    };
+    ExponentialActivation() { updateCoefficients(); };
     ExponentialActivation(Parameters parameters)
         : p_(parameters) {
         updateCoefficients();
@@ -52,16 +53,17 @@ class ExponentialActivation {
     void setInput(Input input);
 
     void setState(State state);
-    //From input and current state calculate the new state of the system
+    // From input and current state calculate the new state of the system
     void integrate(DoubleT dt);
-    //The temporary state calculated via `integrate` becomes the new state
+    // The temporary state calculated via `integrate` becomes the new state
     void validateState();
-    //from the internal state of the system and the input, calculate all the output;
+    // from the internal state of the system and the input, calculate all the
+    // output;
     void calculateOutput();
 
     std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
-    DoubleT evaluate(DoubleT dt);
+    void evaluate(DoubleT dt);
     Parameters &updParameters() { return p_; }
     Parameters getParameters() const { return p_; }
     State &updState() { return s_; }
@@ -77,8 +79,7 @@ class ExponentialActivation {
     State s_, sNew_;
     Input i_;
     Output o_;
-    DoubleT alpha_, beta1_, beta2_,
-        expShapefactor_;
+    DoubleT alpha_, beta1_, beta2_, expShapefactor_;
 };
 
 
@@ -92,13 +93,12 @@ void ExponentialActivation::setInput(Input input) {
     setInput(input.excitation);
 }
 
-void ExponentialActivation::setState(State state) {
-    s_ = state;
-}
+void ExponentialActivation::setState(State state) { s_ = state; }
 
-void ExponentialActivation::integrate(DoubleT ) {
-
-    sNew_.neuralActivationT1 = (alpha_ * i_.excitation) - (beta1_ * s_.neuralActivationT1) - (beta2_ * s_.neuralActivationT2);
+void ExponentialActivation::integrate(DoubleT) {
+    sNew_.neuralActivationT1 = (alpha_ * i_.excitation)
+                               - (beta1_ * s_.neuralActivationT1)
+                               - (beta2_ * s_.neuralActivationT2);
 }
 
 void ExponentialActivation::validateState() {
@@ -107,18 +107,18 @@ void ExponentialActivation::validateState() {
 }
 
 void ExponentialActivation::calculateOutput() {
-    o_.activation = p_.scalefactor * (std::exp(p_.shapefactor * s_.neuralActivationT1) - 1) / (expShapefactor_ - 1);
+    o_.activation = p_.scalefactor
+                    * (std::exp(p_.shapefactor * s_.neuralActivationT1) - 1)
+                    / (expShapefactor_ - 1);
 }
 
-DoubleT ExponentialActivation::evaluate(DoubleT dt) {
+void ExponentialActivation::evaluate(DoubleT dt) {
     integrate(dt);
     validateState();
     calculateOutput();
-    return o_.activation;
 }
-    
-void ExponentialActivation::updateCoefficients() {
 
+void ExponentialActivation::updateCoefficients() {
     beta1_ = p_.c1 + p_.c2;
     beta2_ = p_.c1 * p_.c2;
     alpha_ = 1 + beta1_ + beta2_;

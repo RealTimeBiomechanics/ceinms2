@@ -70,8 +70,7 @@ template<typename T, size_t N>
 std::ostream &operator<<(std::ostream &out, const CircularVector<T, N> &rhs) {
     out << "{";
     if (!rhs.empty()) {
-        for (size_t i(0); i < rhs.size() - 1; ++i)
-            out << rhs[i] << ", ";
+        for (size_t i(0); i < rhs.size() - 1; ++i) out << rhs[i] << ", ";
         out << rhs.back();
     }
     out << "}";

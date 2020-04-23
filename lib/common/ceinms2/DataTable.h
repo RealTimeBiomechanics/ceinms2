@@ -33,7 +33,7 @@
 
 #include <ostream>
 
-//TODO: insert further checks, operators + and -
+// TODO: insert further checks, operators + and -
 namespace ceinms {
 template<typename T>
 class DataTable;
@@ -49,14 +49,16 @@ class DataTable {
 
     DataTable();
     virtual ~DataTable() {}
-    DataTable(size_t nRows, size_t nCols);//do not include time column
-    void setLabels(const std::vector<std::string> &labels);//do not include time column
+    DataTable(size_t nRows, size_t nCols);// do not include time column
+    void setLabels(
+        const std::vector<std::string> &labels);// do not include time column
     std::vector<std::string> getLabels() const { return labels_; }
     void set(T value, size_t row, size_t col);
     void setTimeColumn(const std::vector<double> &timeColumn);
     void setColumn(size_t col, const std::vector<T> &values);
     void setColumn(const std::string &columnName, const std::vector<T> &values);
-    void pushColumn(const std::string &columnName, const std::vector<T> &values);
+    void pushColumn(const std::string &columnName,
+        const std::vector<T> &values);
     const T &at(size_t row, size_t col) const;
     T &at(size_t row, size_t col);
     void pushRow(double time, const std::vector<T> &values);
@@ -65,7 +67,8 @@ class DataTable {
 
     static DataTable sum(const DataTable &lhs, const DataTable &rhs);
     static DataTable subtract(const DataTable &lhs, const DataTable &rhs);
-    static DataTable multiplyByElement(const DataTable &lhs, const DataTable &rhs);
+    static DataTable multiplyByElement(const DataTable &lhs,
+        const DataTable &rhs);
     static DataTable multiplyByScalar(const DataTable &lhs, T scalar);
 
     std::vector<double> accumulateColumns() const;
@@ -77,7 +80,8 @@ class DataTable {
     T getStartTime() const { return time_.front(); }
     T getFinalTime() const { return time_.back(); }
     std::vector<double> getTimeColumn() const { return time_; }
-    const std::vector<T> &getRow(size_t row) const;//return const ref is bad.. checking for performance
+    const std::vector<T> &getRow(
+        size_t row) const;// return const ref is bad.. checking for performance
 
     std::vector<T> getColumn(size_t col) const;
     std::vector<T> getColumn(const std::string &columnName) const;
@@ -86,7 +90,8 @@ class DataTable {
     size_t getNRows() const { return nRows_; }
 
     bool equals(const DataTable &rhs) const;
-    friend std::ostream &operator<<<>(std::ostream &output, const DataTable &ths);
+    friend std::ostream &operator<<<>(std::ostream &output,
+        const DataTable &ths);
     void print(const std::string &filename);
     iterator begin() { return data_.begin(); }
     const_iterator begin() const { return data_.begin(); }
@@ -95,7 +100,8 @@ class DataTable {
 
   private:
     size_t nRows_, nCols_;
-    //internal implementation may be changed to something better.. e.g. nice matrices
+    // internal implementation may be changed to something better.. e.g. nice
+    // matrices
     std::vector<std::vector<T>> data_;
     std::vector<double> time_;
     std::vector<std::string> labels_;

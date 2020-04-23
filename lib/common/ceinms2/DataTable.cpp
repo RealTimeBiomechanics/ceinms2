@@ -46,8 +46,7 @@ DataTable<T>::DataTable(size_t nRows, size_t nCols)
     : nRows_(nRows)
     , nCols_(nCols)
     , data_(std::vector<std::vector<T>>(nRows, std::vector<T>(nCols, T{ 0 })))
-    , time_(nRows, 0) {
-}
+    , time_(nRows, 0) {}
 
 template<typename T>
 void DataTable<T>::setTime(double time, std::size_t row) {
@@ -81,7 +80,9 @@ void DataTable<T>::setColumn(size_t col, const std::vector<T> &values) {
         throw std::invalid_argument("setColumn: index out of bounds.");
 
     if (values.size() != nRows_)
-        throw std::invalid_argument("setColumn: column size is different than number of rows in DataTable.");
+        throw std::invalid_argument(
+            "setColumn: column size is different than number of rows in "
+            "DataTable.");
 
     for (std::size_t row(0); row < nRows_; ++row) {
         set(values[row], row, col);
@@ -90,7 +91,8 @@ void DataTable<T>::setColumn(size_t col, const std::vector<T> &values) {
 
 
 template<typename T>
-void DataTable<T>::setColumn(const std::string &columnName, const std::vector<T> &values) {
+void DataTable<T>::setColumn(const std::string &columnName,
+    const std::vector<T> &values) {
     auto it = std::find(labels_.begin(), labels_.end(), columnName);
     if (it == labels_.end()) {
         throw std::invalid_argument("setColumn: columnName does not exist.");
@@ -99,9 +101,12 @@ void DataTable<T>::setColumn(const std::string &columnName, const std::vector<T>
 }
 
 template<typename T>
-void DataTable<T>::pushColumn(const std::string &columnName, const std::vector<T> &values) {
+void DataTable<T>::pushColumn(const std::string &columnName,
+    const std::vector<T> &values) {
     if (values.size() != nRows_)
-        throw std::invalid_argument("setColumn: column size is different than number of rows in DataTable.");
+        throw std::invalid_argument(
+            "setColumn: column size is different than number of rows in "
+            "DataTable.");
     auto it = std::find(labels_.begin(), labels_.end(), columnName);
     if (it != labels_.end()) {
         throw std::invalid_argument("pushColumn: columnName already exists.");
@@ -154,16 +159,14 @@ template<typename T>
 std::vector<T> DataTable<T>::getColumn(size_t col) const {
     std::vector<T> column;
     column.reserve(nRows_);
-    for (auto &row : data_)
-        column.emplace_back(row.at(col));
+    for (auto &row : data_) column.emplace_back(row.at(col));
     return column;
 }
 
 template<typename T>
 std::vector<T> DataTable<T>::getColumn(const std::string &columnName) const {
     int idx(getColumnIndex(columnName));
-    if (idx != -1)
-        return getColumn(static_cast<size_t>(idx));
+    if (idx != -1) return getColumn(static_cast<size_t>(idx));
     return std::vector<T>();
 }
 
@@ -177,16 +180,24 @@ int DataTable<T>::getColumnIndex(const std::string &columnName) const {
 }
 
 template<typename T>
-DataTable<T> DataTable<T>::sum(const DataTable<T> &lhs, const DataTable<T> &rhs) {
-    if (lhs.getNColumns() != rhs.getNColumns() || lhs.getNColumns() != rhs.getNColumns())
-        throw std::invalid_argument("lhs and rhs differ in size");//check just on data size.. ignore labels and time column
+DataTable<T> DataTable<T>::sum(const DataTable<T> &lhs,
+    const DataTable<T> &rhs) {
+    if (lhs.getNColumns() != rhs.getNColumns()
+        || lhs.getNColumns() != rhs.getNColumns())
+        throw std::invalid_argument(
+            "lhs and rhs differ in size");// check just on data size.. ignore
+                                          // labels and time column
 
-    DataTable<T> ans(lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(), lhs.getNColumns());
+    DataTable<T> ans(
+        lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(),
+        lhs.getNColumns());
     size_t nRows(std::min(lhs.getNRows(), rhs.getNRows()));
     for (size_t row(0); row < nRows; ++row)
-        std::transform(lhs.data_.at(row).begin(), lhs.data_.at(row).end(), rhs.data_.at(row).begin(), ans.data_.at(row).begin(), [](T l, T r) {
-            return l + r;
-        });
+        std::transform(lhs.data_.at(row).begin(),
+            lhs.data_.at(row).end(),
+            rhs.data_.at(row).begin(),
+            ans.data_.at(row).begin(),
+            [](T l, T r) { return l + r; });
     ans.labels_ = lhs.labels_;
     ans.time_.assign(lhs.time_.begin(), lhs.time_.begin() + ans.nRows_);
     return ans;
@@ -204,17 +215,25 @@ std::vector<double> DataTable<T>::accumulateColumns() const {
 }
 
 template<typename T>
-DataTable<T> DataTable<T>::subtract(const DataTable<T> &lhs, const DataTable<T> &rhs) {
-    if (lhs.getNColumns() != rhs.getNColumns() || lhs.getNColumns() != rhs.getNColumns())
-        throw std::invalid_argument("lhs and rhs differ in size");//check just on data size.. ignore labels and time column
+DataTable<T> DataTable<T>::subtract(const DataTable<T> &lhs,
+    const DataTable<T> &rhs) {
+    if (lhs.getNColumns() != rhs.getNColumns()
+        || lhs.getNColumns() != rhs.getNColumns())
+        throw std::invalid_argument(
+            "lhs and rhs differ in size");// check just on data size.. ignore
+                                          // labels and time column
 
-    //initialise with nRows equals to the minmum of the two arguments
-    DataTable<T> ans(lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(), lhs.getNColumns());
+    // initialise with nRows equals to the minmum of the two arguments
+    DataTable<T> ans(
+        lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(),
+        lhs.getNColumns());
     size_t nRows(ans.getNRows());
     for (size_t row(0); row < nRows; ++row)
-        std::transform(lhs.data_.at(row).begin(), lhs.data_.at(row).end(), rhs.data_.at(row).begin(), ans.data_.at(row).begin(), [](T l, T r) {
-            return l - r;
-        });
+        std::transform(lhs.data_.at(row).begin(),
+            lhs.data_.at(row).end(),
+            rhs.data_.at(row).begin(),
+            ans.data_.at(row).begin(),
+            [](T l, T r) { return l - r; });
     ans.labels_ = lhs.labels_;
     ans.time_.assign(lhs.time_.begin(), lhs.time_.begin() + ans.nRows_);
     return ans;
@@ -222,11 +241,17 @@ DataTable<T> DataTable<T>::subtract(const DataTable<T> &lhs, const DataTable<T> 
 
 
 template<typename T>
-DataTable<T> DataTable<T>::multiplyByElement(const DataTable<T> &lhs, const DataTable<T> &rhs) {
-    if (lhs.getNColumns() != rhs.getNColumns() || lhs.getNColumns() != rhs.getNColumns())
-        throw std::invalid_argument("lhs and rhs differ in size");//check just on data size.. ignore labels and time column
+DataTable<T> DataTable<T>::multiplyByElement(const DataTable<T> &lhs,
+    const DataTable<T> &rhs) {
+    if (lhs.getNColumns() != rhs.getNColumns()
+        || lhs.getNColumns() != rhs.getNColumns())
+        throw std::invalid_argument(
+            "lhs and rhs differ in size");// check just on data size.. ignore
+                                          // labels and time column
 
-    DataTable<T> ans(lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(), lhs.getNColumns());
+    DataTable<T> ans(
+        lhs.getNRows() < rhs.getNRows() ? lhs.getNRows() : rhs.getNRows(),
+        lhs.getNColumns());
     for (size_t r(0); r < lhs.nRows_; ++r)
         for (size_t c(0); c < lhs.nCols_; ++c)
             ans.at(r, c) = lhs.at(r, c) * rhs.at(r, c);
@@ -249,15 +274,18 @@ DataTable<T> DataTable<T>::multiplyByScalar(const DataTable<T> &lhs, T scalar) {
 
 template<typename T>
 bool DataTable<T>::equals(const DataTable<T> &rhs) const {
-    return (data_ == rhs.data_ && labels_ == rhs.labels_ && time_ == rhs.time_ && nCols_ == rhs.nCols_ && nRows_ == rhs.nRows_);
+    return (data_ == rhs.data_ && labels_ == rhs.labels_ && time_ == rhs.time_
+            && nCols_ == rhs.nCols_ && nRows_ == rhs.nRows_);
 }
 
 template<typename T>
 void DataTable<T>::crop(double startTime, double finalTime) {
     startTime = std::max(getStartTime(), startTime);
     finalTime = std::min(getFinalTime(), finalTime);
-    auto tBegin = std::upper_bound(time_.begin(), time_.end(), startTime, std::less_equal<double>());
-    auto tEnd = std::upper_bound(time_.begin(), time_.end(), finalTime, std::less<double>());
+    auto tBegin = std::upper_bound(
+        time_.begin(), time_.end(), startTime, std::less_equal<double>());
+    auto tEnd = std::upper_bound(
+        time_.begin(), time_.end(), finalTime, std::less<double>());
     auto dBegin = data_.begin();
     auto dEnd = data_.end();
 
@@ -291,13 +319,11 @@ std::ostream &operator<<(std::ostream &out, const DataTable<T> &rhs) {
     out << "DataTable " << rhs.nRows_ << "x" << rhs.nCols_ << std::endl;
     out << "Time"
         << "\t";
-    for (auto &l : rhs.labels_)
-        out << l << "\t";
+    for (auto &l : rhs.labels_) out << l << "\t";
     out << std::endl;
     for (size_t i(0); i < rhs.nRows_; ++i) {
         out << rhs.time_.at(i) << "\t";
-        for (auto &e : rhs.data_.at(i))
-            out << e << "\t";
+        for (auto &e : rhs.data_.at(i)) out << e << "\t";
         out << std::endl;
     }
     return out;

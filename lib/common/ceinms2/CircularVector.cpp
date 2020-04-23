@@ -33,14 +33,14 @@ using std::vector;
 #include <stdlib.h>
 
 namespace ceinms {
-//const unsigned DEFAULT_MAX_SIZE = 15;
+// const unsigned DEFAULT_MAX_SIZE = 15;
 
 template<typename T, size_t N>
 CircularVector<T, N>::CircularVector()
     : count_(0)
     , beg_(0)
     , v_({ .0 }) {
-    //empty
+    // empty
 }
 
 
@@ -78,7 +78,8 @@ T &CircularVector<T, N>::operator[](unsigned i) {
 
 
 template<typename T, size_t N>
-CircularVector<T, N> &CircularVector<T, N>::operator=(const CircularVector<T, N> &rhs) {
+CircularVector<T, N> &CircularVector<T, N>::operator=(
+    const CircularVector<T, N> &rhs) {
     v_ = rhs.v_;
     count_ = rhs.count_;
     beg_ = rhs.beg_;
@@ -86,8 +87,9 @@ CircularVector<T, N> &CircularVector<T, N>::operator=(const CircularVector<T, N>
     return *this;
 }
 
-//template<typename T, size_t N>
-//CircularVector<T, N>& CircularVector<T, N>::operator=(const std::vector<T>& rhs) {
+// template<typename T, size_t N>
+// CircularVector<T, N>& CircularVector<T, N>::operator=(const std::vector<T>&
+// rhs) {
 //
 //    v_ = rhs;
 //    count_ = rhs.size();
@@ -105,8 +107,8 @@ CircularVector<T, N>::CircularVector(const CircularVector<T, N> &rhs) {
 }
 
 
-//template<typename T, size_t N>
-//void CircularVector<T, N>::resizeMax(unsigned i) {
+// template<typename T, size_t N>
+// void CircularVector<T, N>::resizeMax(unsigned i) {
 //
 //    size_ = i;
 //    v_.resize(size_);
@@ -137,8 +139,7 @@ void CircularVector<T, N>::push_back(const T &e) {
 
 template<typename T, size_t N>
 void CircularVector<T, N>::pop_back() {
-    if (count_ != 0)
-        --count_;
+    if (count_ != 0) --count_;
 }
 
 

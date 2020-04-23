@@ -34,7 +34,7 @@ using std::vector;
 #include <algorithm>
 
 namespace ceinms {
-//const static int pointsNumber = 17;
+// const static int pointsNumber = 17;
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 Curve<mode, T, N>::Curve() {
     // make a local copy of the points
@@ -46,11 +46,11 @@ Curve<mode, T, N>::Curve() {
 }
 
 /* CALC_SPLINE_COEEFICIENTS: this routine takes an array of x and y values,
-    * and computes the coefficients of natural splines which interpolate the data.
-    * The code is translated from a Fortran version printed in "Computer
-    * Methods for Mathematical Computations" by Forsythe, Malcolm, and
-    * Moler, pp 77-8.
-    */
+ * and computes the coefficients of natural splines which interpolate the data.
+ * The code is translated from a Fortran version printed in "Computer
+ * Methods for Mathematical Computations" by Forsythe, Malcolm, and
+ * Moler, pp 77-8.
+ */
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 Curve<mode, T, N>::Curve(const vector<double> &x, const vector<double> &y) {
@@ -93,7 +93,8 @@ void Curve<mode, T, N>::reset() {
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-void Curve<mode, T, N>::resetPointsWith(const vector<double> &x, const vector<double> &y) {
+void Curve<mode, T, N>::resetPointsWith(const vector<double> &x,
+    const vector<double> &y) {
     // make a local copy of the points
     x_ = x;
     y_ = y;
@@ -195,10 +196,13 @@ void Curve<mode, T, N>::computeCoefficients(Int2Type<CurveMode::Cubic>) {
         c_.at(nm1) = 0.;
 
         if (n > 3) {
-            c_.at(0) = c_.at(2) / (x_.at(3) - x_.at(1)) - c_.at(1) / (x_.at(2) - x_.at(0));
-            c_.at(nm1) = c_.at(nm1 - 1) / (x_.at(nm1) - x_.at(n - 3)) - c_.at(n - 3) / (x_.at(nm1 - 1) - x_.at(n - 4));
+            c_.at(0) = c_.at(2) / (x_.at(3) - x_.at(1))
+                       - c_.at(1) / (x_.at(2) - x_.at(0));
+            c_.at(nm1) = c_.at(nm1 - 1) / (x_.at(nm1) - x_.at(n - 3))
+                         - c_.at(n - 3) / (x_.at(nm1 - 1) - x_.at(n - 4));
             c_.at(0) = c_.at(0) * d_.at(0) * d_.at(0) / (x_.at(3) - x_.at(0));
-            c_.at(nm1) = -c_.at(nm1) * d_.at(nm1 - 1) * d_.at(nm1 - 1) / (x_.at(nm1) - x_.at(n - 4));
+            c_.at(nm1) = -c_.at(nm1) * d_.at(nm1 - 1) * d_.at(nm1 - 1)
+                         / (x_.at(nm1) - x_.at(n - 4));
         }
 
         // Forward elimination
@@ -216,10 +220,12 @@ void Curve<mode, T, N>::computeCoefficients(Int2Type<CurveMode::Cubic>) {
         }
 
         // compute polynomial coefficients
-        b_.at(nm1) = (y_.at(nm1) - y_.at(nm1 - 1)) / d_.at(nm1 - 1) + d_.at(nm1 - 1) * (c_.at(nm1 - 1) + 2.0 * c_.at(nm1));
+        b_.at(nm1) = (y_.at(nm1) - y_.at(nm1 - 1)) / d_.at(nm1 - 1)
+                     + d_.at(nm1 - 1) * (c_.at(nm1 - 1) + 2.0 * c_.at(nm1));
 
         for (size_t i = 0; i < nm1; ++i) {
-            b_.at(i) = (y_.at(i + 1) - y_.at(i)) / d_.at(i) - d_.at(i) * (c_.at(i + 1) + 2.0 * c_.at(i));
+            b_.at(i) = (y_.at(i + 1) - y_.at(i)) / d_.at(i)
+                       - d_.at(i) * (c_.at(i + 1) + 2.0 * c_.at(i));
             d_.at(i) = (c_.at(i + 1) - c_.at(i)) / d_.at(i);
             c_.at(i) *= 3.0;
         }
@@ -261,9 +267,11 @@ size_t Curve<mode, T, N>::getAbscissaPoint(double xValue) const {
 }
 
 
-//the circular vector does't have iterators.. so in the meantime we fix it like this
+// the circular vector does't have iterators.. so in the meantime we fix it like
+// this
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-size_t Curve<mode, T, N>::getAbscissaPoint(double xValue, Int2Type<CurveMode::Online>) const {
+size_t Curve<mode, T, N>::getAbscissaPoint(double xValue,
+    Int2Type<CurveMode::Online>) const {
     size_t i = 0;
     const size_t j = x_.size();
     size_t k = 0;
@@ -281,8 +289,12 @@ size_t Curve<mode, T, N>::getAbscissaPoint(double xValue, Int2Type<CurveMode::On
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-size_t Curve<mode, T, N>::getAbscissaPoint(double xValue, Int2Type<CurveMode::Offline>) const {
-    return static_cast<unsigned>(std::distance(x_.begin(), std::lower_bound(x_.begin(), x_.end(), xValue)) - 1);
+size_t Curve<mode, T, N>::getAbscissaPoint(double xValue,
+    Int2Type<CurveMode::Offline>) const {
+    return static_cast<unsigned>(
+        std::distance(
+            x_.begin(), std::lower_bound(x_.begin(), x_.end(), xValue))
+        - 1);
 }
 
 
@@ -304,12 +316,14 @@ double Curve<mode, T, N>::getValue(double xValue) const {
 
 /*******************************************************************************/
 /* INTERPOLATE_SPLINE: given a spline function and an x-value, this routine
-    * finds the corresponding y-value by interpolating the spline. It
-    * can return the zeroth, first, or second derivative of the spline
-    * at that x-value.
-    */
+ * finds the corresponding y-value by interpolating the spline. It
+ * can return the zeroth, first, or second derivative of the spline
+ * at that x-value.
+ */
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getValue(double xalue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const {
+double Curve<mode, T, N>::getValue(double xalue,
+    size_t abscissaPoint,
+    Int2Type<CurveMode::Cubic>) const {
     const size_t k(abscissaPoint);
     double dx = xalue - x_.at(k);
     double result(y_.at(k) + dx * (b_.at(k) + dx * (c_.at(k) + dx * d_.at(k))));
@@ -318,7 +332,9 @@ double Curve<mode, T, N>::getValue(double xalue, size_t abscissaPoint, Int2Type<
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getValue(double xalue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const {
+double Curve<mode, T, N>::getValue(double xalue,
+    size_t abscissaPoint,
+    Int2Type<CurveMode::Linear>) const {
     const unsigned k(abscissaPoint);
     double dx = xalue - x_.at(k);
     return b_.at(k) * dx + y_.at(k);
@@ -345,13 +361,16 @@ double Curve<mode, T, N>::getFirstDerivative(double xValue) const {
     else if (n == 1)
         yValue = .0;
     else
-        yValue = getFirstDerivative(xValue, getAbscissaPoint(xValue), Int2Type<T>());
+        yValue =
+            getFirstDerivative(xValue, getAbscissaPoint(xValue), Int2Type<T>());
     return yValue;
 }
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const {
+double Curve<mode, T, N>::getFirstDerivative(double xValue,
+    size_t abscissaPoint,
+    Int2Type<CurveMode::Cubic>) const {
     unsigned k(abscissaPoint);
     double dx = xValue - x_.at(k);
     if (nearly_equal(dx, 0.)) return b_.at(k);
@@ -360,7 +379,9 @@ double Curve<mode, T, N>::getFirstDerivative(double xValue, size_t abscissaPoint
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const {
+double Curve<mode, T, N>::getFirstDerivative(double xValue,
+    size_t abscissaPoint,
+    Int2Type<CurveMode::Linear>) const {
     return b_.at(abscissaPoint);
 }
 
@@ -372,22 +393,19 @@ double Curve<mode, T, N>::getSecondDerivative(double xValue) const {
 
     // Now see if the abscissa is out of range of the function
 
-    if (xValue < x_.at(0))
-        return b_.at(0);
+    if (xValue < x_.at(0)) return b_.at(0);
 
-    if (xValue > x_.at(n - 1))
-        return b_.at(n - 1);
+    if (xValue > x_.at(n - 1)) return b_.at(n - 1);
 
 
-    if (n == 1)
-        return 0;
+    if (n == 1) return 0;
 
     int k = 0;
     if (n == 2)
         k = 0;
     else {
-        // Do a binary search to find which two spline control points the abscissa
-        // is between
+        // Do a binary search to find which two spline control points the
+        // abscissa is between
 
         int i = 0;
         int j = n;
@@ -409,19 +427,20 @@ double Curve<mode, T, N>::getSecondDerivative(double xValue) const {
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 std::ostream &operator<<(std::ostream &output, const Curve<mode, T, N> &c) {
-    for (unsigned i = 0; i < c.x_.size(); ++i)
-        output << c.x_.at(i) << " ";
+    for (unsigned i = 0; i < c.x_.size(); ++i) output << c.x_.at(i) << " ";
     output << std::endl;
-    for (unsigned i = 0; i < c.y_.size(); ++i)
-        output << c.y_.at(i) << " ";
+    for (unsigned i = 0; i < c.y_.size(); ++i) output << c.y_.at(i) << " ";
     output << std::endl;
-    for (std::vector<double>::const_iterator it = c.b_.begin(); it < c.b_.end(); ++it)
+    for (std::vector<double>::const_iterator it = c.b_.begin(); it < c.b_.end();
+         ++it)
         output << *it << " ";
     output << std::endl;
-    for (std::vector<double>::const_iterator it = c.c_.begin(); it < c.c_.end(); ++it)
+    for (std::vector<double>::const_iterator it = c.c_.begin(); it < c.c_.end();
+         ++it)
         output << *it << " ";
     output << std::endl;
-    for (std::vector<double>::const_iterator it = c.d_.begin(); it < c.d_.end(); ++it)
+    for (std::vector<double>::const_iterator it = c.d_.begin(); it < c.d_.end();
+         ++it)
         output << *it << " ";
     output << std::endl;
     return output;
