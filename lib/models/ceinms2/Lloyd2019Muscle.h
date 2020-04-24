@@ -1,10 +1,10 @@
 #ifndef ceinms2_Lloyd2019Muscle_h
 #define ceinms2_Lloyd2019Muscle_h
-
+#include "ceinms2/Types.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/WDBsolver.h"
 #include <cmath>
-using DoubleT = double;
+
 using CurveOffline = ceinms::Curve<ceinms::CurveMode::Offline,
     ceinms::CurveMode::Interpolation::Cubic>;
 namespace ceinms {
@@ -12,6 +12,7 @@ namespace ceinms {
 class Lloyd2019Muscle {
   public:
     using type = nullptr_t;
+    using concept_t = component_t;
     static constexpr std::string_view class_name = "Lloyd2019Muscle";
     struct Parameters {
         Parameters()

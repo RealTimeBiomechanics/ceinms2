@@ -1,6 +1,7 @@
 set(common_HEADERS 	ceinms2/Curve.h
 					ceinms2/CircularVector.h
-					ceinms2/DataTable.h)
+					ceinms2/DataTable.h
+					ceinms2/Types.h)
 set(common_TEMPLATE_IMPLEMENTATION
 					ceinms2/Curve.cpp
 					ceinms2/CircularVector.cpp

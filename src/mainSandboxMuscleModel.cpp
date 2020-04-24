@@ -12,24 +12,7 @@
 #include <algorithm>
 #include <string>
 using namespace std;
-using DoubleT = double;
 
-enum class DataType { Excitation, MusculotendonLength, MomentArm };
-
-template<DataType>
-struct Input {
-    using type = DataType;
-    static constexpr std::string_view class_name = "Input";
-    Input()
-        : value(0) {}
-    explicit Input(DoubleT val)
-        : value(val) {}
-    DoubleT value;
-};
-
-using Excitation = Input<DataType::Excitation>;
-using MusculotendonLength = Input<DataType::MusculotendonLength>;
-using MomentArm = Input<DataType::MomentArm>;
 
 class Socket {
   public:
@@ -55,6 +38,12 @@ class Socket {
     size_t slot_;
     bool hasSlot_;
 };
+
+std::ostream &operator<<(std::ostream &os, const Socket &sock) {
+    os << sock.getName();
+    if (sock.hasSlot()) os << "." << sock.getSlot();
+    return os;
+}
 
 
 auto getDefaultMuscle() {
@@ -178,20 +167,26 @@ void connectSocket(const Excitation &parent,
 
 
 template<typename MultiInMultiOutT, typename Component, 
-enable_if_t<!is_same<DataType, typename Component::type>::value, int> = 0>
-void connectSocket(const MultiInMultiOutT &parent,
-    Component &child,
-    size_t parentSlot) {
+enable_if_t<
+    is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value && is_same<typename Component::concept_t, component_t>::value 
+    , int> = 0>
+void connectSocket(const MultiInMultiOutT &parent, Component &child, size_t parentSlot) {
     connectSocket(parent.getOutput().at(parentSlot), child);
 }
 
 template<typename InputT,
     typename MultiInMultiOutT,
-    enable_if_t<is_same<DataType, typename InputT::type>::value, int> = 0>
-     void connectSocket(const InputT &parent, MultiInMultiOutT &child,
-    size_t childSlot) {
+    enable_if_t<is_same<DataType, typename InputT::type>::value && is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value,
+        int> = 0>
+void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSlot) {
     connectSocket(parent, child.getInput().at(childSlot));
 }
+
+template<typename T, typename U>
+void connectSocket(const T&, U&,...) {
+    cout << "No socket connection" << endl;
+}
+
 
 
 template<typename T>
@@ -202,6 +197,7 @@ class Stage {
 
   public:
     using type = T;
+    using concept_t = stage_t;
     /*Makes an internal copy of `component`*/
     void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
 
@@ -216,26 +212,38 @@ class Stage {
         return ret;
     }
 
+    /*Need to check what slot is used to connect to a parent with multi input multi output*/
     template<typename U>
     void connectToParent(Socket childSocket, const U &parent) noexcept {
         struct Command {
-            Command(const U &parent, Socket childSocket)
+            Command(const U &parent)
+                : p(parent){}
+            const U &p;
+            void operator()(T &child) {
+                    connectSocket(p, child);
+            }
+        };
+
+        struct CommandWithSlot {
+            CommandWithSlot(const U &parent, Socket childSocket)
                 : p(parent)
                 , s(childSocket) {}
             const U &p;
             const Socket s;
             void operator()(T &child) {
-                if (s.hasSlot())
-                    connectSocket(p, child);
-                else
-                    connectSocket<U, T>(p, child, s.getSlot());
+                connectSocket<U, T>(p, child, s.getSlot());
             }
         };
+
+        if (!childSocket.hasSlot())
         connections_[childSocket.getName()].emplace_back(
-            function<void(T &)>(Command(parent, childSocket)));
+            function<void(T &)>(Command(parent)));
+        else
+            connections_[childSocket.getName()].emplace_back(
+                function<void(T &)>(CommandWithSlot(parent, childSocket)));
     }
 
-
+    /*
     template<typename U>
     void connectToParent(string childName, const U &parent, size_t subslot) noexcept {
         struct Command {
@@ -246,7 +254,7 @@ class Stage {
         };
         connections_[childName].emplace_back(function<void(T &)>(Command(parent)));
     }
-
+    */
 
     [[nodiscard]] const T &get(string name) const {
         auto it = find_if(cbegin(components_), cend(components_), [&name](const auto &e) {
@@ -289,6 +297,7 @@ class Source {
 
   public:
     using type = T;
+    using concept_t = source_t;
     Source()
         : nInput_(0) {}
 
@@ -329,9 +338,6 @@ class Source {
 template<typename InT, typename OutT>
 class MultiInputMultiOutput {
   private:
-    using type = nullptr_t;
-    using in_type = InT;
-    using out_type = OutT;
     function<vector<OutT>(const vector<InT>&)> fun_;
     size_t nInput_, nOutput_;
     vector<InT> input_;
@@ -339,6 +345,9 @@ class MultiInputMultiOutput {
     string name_;
 
   public:
+    using type = nullptr_t;
+    using concept_t = component_mimo_t;
+    static constexpr std::string_view class_name = "MultiInputMultiOutput";
     MultiInputMultiOutput(size_t nInput, size_t nOutput)
         : nInput_(nInput)
         , nOutput_(nOutput)
@@ -353,6 +362,7 @@ class MultiInputMultiOutput {
     vector<OutT> &getInput() { return input_; }
 
     void setName(string name) { name_ = name; }
+    std::string getName() const { return name_; }
     void evaluate(DoubleT) { output_ = fun_(input_); }
 };
 
@@ -397,8 +407,9 @@ class NMSmodel {
     //`T` and `U` are of type `Stage`
     template<typename T,
         typename U,
-        enable_if_t<is_same<T, Stage<typename T::type>>::value
-                        && is_same<U, Stage<typename U::type>>::value,
+        enable_if_t<is_same<typename T::concept_t, stage_t>::value
+                        && is_same<typename U::concept_t, stage_t>::value,
+            
             int> = 0>
     void connect_() {
         auto parentComponentNames = std::get<T>(stages_).getNames();
@@ -423,8 +434,8 @@ class NMSmodel {
         //`T` is an Input and and `U` is a `Stage`
     template<typename T,
         typename U,
-        enable_if_t<is_same<DataType, typename T::type>::value
-                        && is_same<U, Stage<typename U::type>>::value,
+        enable_if_t<is_same<typename T::concept_t, input_t>::value
+                        && is_same<typename U::concept_t, stage_t>::value,
             int> = 0>
     void connect_() {
         auto parentComponentNames = std::get<Source<T>>(input_).getNames();
@@ -446,16 +457,19 @@ class NMSmodel {
     }
 
     // Need to implement component concepts
-    //`T` is of type `Source` and `U` is a Component
+    //`T` is of type `Input` and `U` is a Component
     template<typename T,
         typename U,
-        enable_if_t<is_same<DataType, typename T::type>::value, int> = 0>
+        enable_if_t<is_same<typename T::concept_t, input_t>::value
+                        && (is_same<typename U::concept_t, component_t>::value ||
+                            is_same<typename U::concept_t, component_mimo_t>::value ),
+            int> = 0>
     void connect_(Socket parent, Socket child) {
-        cout << "Connecting " << T::class_name << "." << parent.getName() << " -> " << U::class_name
-             << "." << child.getName() << endl;
+        cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name
+             << "." << child << endl;
 
         const auto &input = get<Source<T>>(input_).get(parent.getName());
-        std::get<Stage<U>>(stages_).connectToParent(child.getName(), input);
+        std::get<Stage<U>>(stages_).connectToParent(child, input);
     }
 
 
@@ -463,16 +477,16 @@ class NMSmodel {
     //`T` and `U` are both a Component
     template<typename T,
         typename U,
-        enable_if_t<!is_same<DataType, typename T::type>::value
-                        && !is_same<DataType, typename U::type>::value
-                        && !is_same<T, Stage<typename T::type>>::value
-                        && !is_same<U, Stage<typename U::type>>::value,
+        enable_if_t<(  is_same<typename T::concept_t, component_t>::value
+                    || is_same<typename T::concept_t, component_mimo_t>::value)
+                    && (is_same<typename U::concept_t, component_t>::value
+                    || is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
-    void connect_(Socket parent, Socket child, ...) {
-        cout << "Connecting  " << T::class_name<< "." << parent.getName()
-             << " -> " << U::class_name << "." << child.getName() << endl;
+    void connect_(Socket parent, Socket child) {
+        cout << "Connecting " << T::class_name << "." << parent << " -> "
+             << U::class_name << "." << child << endl;
         auto parentComponent = get<Stage<T>>(stages_).get(parent.getName());
-        std::get<Stage<U>>(stages_).connectToParent(child.getName(), parentComponent);
+        std::get<Stage<U>>(stages_).connectToParent(child, parentComponent);
     }
 
     template<typename T,
@@ -575,11 +589,11 @@ int testConnections() {
             model.addInput<MusculotendonLength>(name);
             model.addInput<Excitation>(name);
         }
-        cout << "Connect Excitation input to ExponentialActivation component" << endl;
+        cout << "# Connect Excitation input to ExponentialActivation component" << endl;
         model.connect<Excitation, ceinms::ExponentialActivation>();
-        cout << "Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
+        cout << "# Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
         model.connect<MusculotendonLength, ceinms::Lloyd2019Muscle>();
-        cout << "Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
+        cout << "# Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
         model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2019Muscle>();
     } catch (...) { return 1; }
     try {
@@ -603,17 +617,70 @@ int testConnections() {
             string name = "to_not_connect" + to_string(i);
             model.addInput<Excitation>(name);
         }
-        cout << "Connect Excitation input to ExponentialActivation component" << endl;
+        cout << "# Connect Excitation input to ExponentialActivation component" << endl;
         model.connect<Excitation, ceinms::ExponentialActivation>();
-        cout << "Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
+        cout << "# Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
         model.connect<MusculotendonLength, ceinms::Lloyd2019Muscle>();
-        cout << "Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
+        cout << "# Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
         model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2019Muscle>();
     } catch (...) { return 1; }
+    try {
+        /*Test if conncetion with multi input multi output component
+         */
+        cout << "------------TEST 4------------\n";
+        NMSmodel model;
+        ceinms::ExponentialActivation act(getDefaultActivation());
+        MultiInputMultiOutput<Excitation, Excitation> mimo(2,3);
+        mimo.setName("mimo");
+        model.addComponent<MultiInputMultiOutput<Excitation, Excitation>>(mimo);
+        for (int i(0); i < 3; ++i) {
+            string name = "mtu" + to_string(i);
+            act.setName(name);
+            model.addComponent(act);
+            model.addInput<Excitation>(name);
+        }
+        for (int i(0); i < 3; ++i) {
+            string name = "to_not_connect" + to_string(i);
+            model.addInput<Excitation>(name);
+        }
+        cout << "# Connect Excitation input to MultiInputMultiOutput component" << endl;
+        model.connect<Excitation, MultiInputMultiOutput<Excitation, Excitation>>(
+            "mtu0", { "mimo", 0 });
+        model.connect<Excitation, MultiInputMultiOutput<Excitation, Excitation>>(
+            "mtu1", { "mimo", 1 });
+
+
+        cout << "# Connect MultiInputMultiOutput component to ExponentialActivation" << endl;
+        model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
+            { "mimo", 0 }, "mtu0" );
+        model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
+            { "mimo", 1 }, "mtu1");
+        model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
+           { "mimo", 2 }, "mtu2");
+
+    } catch (...) { return 1; }
+
+    return 0;
+}
+
+int testConcepts() { 
+    static_assert(is_same<typename Excitation::concept_t, input_t>::value);
+    static_assert(is_same<typename MusculotendonLength::concept_t, input_t>::value);
+    static_assert(is_same<typename MomentArm::concept_t, input_t>::value);
+    static_assert(is_same<typename ceinms::ExponentialActivation::concept_t, component_t>::value);
+    static_assert(is_same<typename ceinms::Lloyd2019Muscle::concept_t, component_t>::value);
+    static_assert(is_same<typename Stage<ceinms::Lloyd2019Muscle>::concept_t, stage_t>::value);
+    static_assert(is_same<typename Stage<ceinms::ExponentialActivation>::concept_t, stage_t>::value);
+    static_assert(is_same<typename Source<Excitation>::concept_t, source_t>::value);
+    static_assert(is_same<typename Source<MusculotendonLength>::concept_t, source_t>::value);
+    static_assert(
+        is_same<typename MultiInputMultiOutput<Excitation, MusculotendonLength>::concept_t,
+            component_mimo_t>::value);
     return 0;
 }
 
 int main() {
+    testConcepts();
     testConnections();
     return 0;
 }

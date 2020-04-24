@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <type_traits>
 #include <string_view>
+#include "ceinms2/Types.h"
 namespace ceinms {
 
 class ExponentialActivation {
@@ -11,8 +12,7 @@ class ExponentialActivation {
     //this is required to allow some of the template magic in the `NMSmodel` class to work
     //it might be removed once we move to Concepts
     using type = nullptr_t;
-    using DoubleT = double;
-    
+    using concept_t = component_t;    
     static constexpr std::string_view class_name = "ExponentialActivation";
     struct Parameters {
         Parameters()
