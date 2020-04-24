@@ -12,6 +12,7 @@ namespace ceinms {
 class Lloyd2019Muscle {
   public:
     using type = nullptr_t;
+    static constexpr std::string_view class_name = "Lloyd2019Muscle";
     struct Parameters {
         Parameters()
             : optimalFiberLength(1.)

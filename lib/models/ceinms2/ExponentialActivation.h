@@ -3,13 +3,17 @@
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
-
+#include <string_view>
 namespace ceinms {
 
 class ExponentialActivation {
   public:
+    //this is required to allow some of the template magic in the `NMSmodel` class to work
+    //it might be removed once we move to Concepts
     using type = nullptr_t;
     using DoubleT = double;
+    
+    static constexpr std::string_view class_name = "ExponentialActivation";
     struct Parameters {
         Parameters()
             : c1(-0.5)
