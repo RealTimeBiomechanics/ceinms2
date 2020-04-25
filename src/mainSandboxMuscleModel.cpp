@@ -1,6 +1,7 @@
 #include <ceinms2/Lloyd2019Muscle.h>
 #include <ceinms2/ExponentialActivation.h>
 #include <ceinms2/NMSmodel.h>
+#include <iostream>
 
 using namespace std;
 using namespace ceinms;
@@ -106,12 +107,13 @@ auto getDefaultActivation() {
 }
 
 int testConnections() {
+    using MyNMSmodel = NMSmodel<ExponentialActivation, Lloyd2019Muscle, MultiInputMultiOutput<Excitation,Excitation>>;
     try {
         /*Test if automatic connection between input and component and between component and
          * component works well. The matching is based on naming.
          */
         cout << "------------TEST 1------------\n";
-        NMSmodel model;
+        MyNMSmodel model;
         ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
         muscle.setName("mtu1");
         ceinms::ExponentialActivation act(getDefaultActivation());
@@ -131,7 +133,7 @@ int testConnections() {
          * and components
          */
         cout << "------------TEST 2------------\n";
-        NMSmodel model;
+        MyNMSmodel model;
         ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
         ceinms::ExponentialActivation act(getDefaultActivation());
         for (int i(0); i < 10; ++i) {
@@ -155,7 +157,7 @@ int testConnections() {
          * component works well. In this test we are going to create a model with a different number of input and components.
          */
         cout << "------------TEST 3------------\n";
-        NMSmodel model;
+        MyNMSmodel model;
         ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
         ceinms::ExponentialActivation act(getDefaultActivation());
         for (int i(0); i < 10; ++i) {
@@ -182,7 +184,7 @@ int testConnections() {
         /*Test if conncetion with multi input multi output component
          */
         cout << "------------TEST 4------------\n";
-        NMSmodel model;
+        MyNMSmodel model;
         ceinms::ExponentialActivation act(getDefaultActivation());
         MultiInputMultiOutput<Excitation, Excitation> mimo(2,3);
         mimo.setName("mimo");

@@ -26,6 +26,7 @@ class Source;
 template<typename InT, typename OutT>
 class MultiInputMultiOutput;
 
+template<typename...>
 class NMSmodel;
 
 template<typename MultiInMultiOutT,
@@ -240,7 +241,7 @@ class MultiInputMultiOutput {
     void evaluate(DoubleT) { output_ = fun_(input_); }
 };
 
-
+template<typename... Args>
 class NMSmodel {
   public:
     template<typename T>
@@ -270,10 +271,7 @@ class NMSmodel {
     void evaluate(DoubleT dt) noexcept;
 
   private:
-    std::tuple<Stage<ceinms::ExponentialActivation>,
-        Stage<ceinms::Lloyd2019Muscle>,
-        Stage<MultiInputMultiOutput<Excitation, Excitation>>>
-        stages_;
+    std::tuple<Stage<Args>...> stages_;
     std::tuple<Source<Excitation>, Source<MusculotendonLength>, Source<MomentArm>> input_;
 
     //`T` and `U` are of type `Stage`
@@ -366,34 +364,38 @@ class NMSmodel {
     }
 };
 
-
+template<typename... Args>
 template<typename T>
-void NMSmodel::setInput(const std::vector<T> &values) noexcept {
+void NMSmodel<Args...>::setInput(const std::vector<T> &values) noexcept {
     // TODO: check size first
     std::get<Source<T>>(input_).set(values);
 }
 
+template<typename... Args>
 template<typename T>
-void NMSmodel::addInput(const std::string &name) noexcept {
+void NMSmodel<Args...>::addInput(const std::string &name) noexcept {
     // TODO: check for other input with same name
     // throw error if same component already exists
     std::get<Source<T>>(input_).addInput(name);
 }
 
+template<typename... Args>
 template<typename T>
-void NMSmodel::addComponent(const T &component) noexcept {
+void NMSmodel<Args...>::addComponent(const T &component) noexcept {
     // TODO: check for other components with same name
     // throw error if same component already exists
     std::get<Stage<T>>(stages_).addComponent(component);
 }
 
+template<typename... Args>
 template<typename Parent, typename Child>
-void NMSmodel::connect(Socket parent, Socket child) {
+void NMSmodel<Args...>::connect(Socket parent, Socket child) {
     connect_<Parent, Child>(parent, child);
 }
 
+template<typename... Args>
 template<typename Parent, typename Child>
-void NMSmodel::connect() {
+void NMSmodel<Args...>::connect() {
     if constexpr (is_same<DataType, typename Parent::type>::value) {
         connect_<Parent, Stage<Child>>();
     } else {
@@ -401,23 +403,27 @@ void NMSmodel::connect() {
     }
 }
 
-void NMSmodel::evaluate(DoubleT dt) noexcept {
+template<typename... Args>
+void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
     std::get<Stage<ceinms::ExponentialActivation>>(stages_).evaluate(dt);
     std::get<Stage<ceinms::Lloyd2019Muscle>>(stages_).evaluate(dt);
 }
 
+template<typename... Args>
 template<typename T>
-auto NMSmodel::getOutput() const noexcept {
+auto NMSmodel<Args...>::getOutput() const noexcept {
     return std::get<Stage<T>>(stages_).getOutput();
 }
 
+template<typename... Args>
 template<typename Component>
-const auto &NMSmodel::getComponent(std::string name) const {
+const auto &NMSmodel<Args...>::getComponent(std::string name) const {
     return std::get<Stage<Component>>(stages_).get(name);
 }
 
+template<typename... Args>
 template<typename Component>
-auto &NMSmodel::getComponent(std::string name) {
+auto &NMSmodel<Args...>::getComponent(std::string name) {
     return std::get<Stage<Component>>(stages_).get(name);
 }
 
