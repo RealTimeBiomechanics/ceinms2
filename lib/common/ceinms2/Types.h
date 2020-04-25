@@ -17,14 +17,13 @@ struct Input {
     using concept_t = input_t;
     using type = DataType;
     static constexpr std::string_view class_name = "Input";
-    Input()
-        : value(0) {}
+    Input() = default;
     explicit Input(DoubleT val)
         : value(val) {}
-    DoubleT value;
+    DoubleT value{0.};
 };
 using Excitation = Input<DataType::Excitation>;
 using MusculotendonLength = Input<DataType::MusculotendonLength>;
 using MomentArm = Input<DataType::MomentArm>;
 
-#endif;
+#endif

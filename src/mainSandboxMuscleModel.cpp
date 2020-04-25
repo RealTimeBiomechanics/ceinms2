@@ -41,13 +41,13 @@ class Socket {
 
 std::ostream &operator<<(std::ostream &os, const Socket &sock) {
     os << sock.getName();
-    if (sock.hasSlot()) os << "." << sock.getSlot();
+    if (sock.hasSlot()) { os << "." << sock.getSlot(); }
     return os;
 }
 
 
 auto getDefaultMuscle() {
-    vector<DoubleT> act_x{ 0.4241,
+    const vector<DoubleT> act_x{ 0.4241,
         0.4641,
         0.5441,
         0.6241,
@@ -61,7 +61,7 @@ auto getDefaultMuscle() {
         1.2241,
         1.7841,
         1.8241 };
-    vector<DoubleT> act_y{ 0,
+    const vector<DoubleT> act_y{ 0,
         0.0036,
         0.2531,
         0.5362,
@@ -76,17 +76,17 @@ auto getDefaultMuscle() {
         0.0117,
         0 };
 
-    vector<DoubleT> pas_x{ 1, 1.116, 1.22, 1.324, 1.428, 1.61, 2 };
-    vector<DoubleT> pas_y{ 0, 0.0208, 0.0604, 0.1536, 0.3117, 0.7448, 1.8571 };
+    const vector<DoubleT> pas_x{ 1, 1.116, 1.22, 1.324, 1.428, 1.61, 2 };
+    const vector<DoubleT> pas_y{ 0, 0.0208, 0.0604, 0.1536, 0.3117, 0.7448, 1.8571 };
 
-    vector<DoubleT> vel_x{
+    const vector<DoubleT> vel_x{
         -1, -0.624, -0.312, -0.104, 0, 0.104, 0.312, 0.624, 0.832, 0.988
     };
-    vector<DoubleT> vel_y{
+    const vector<DoubleT> vel_y{
         0, 0.0939, 0.3174, 0.6162, 1, 1.2278, 1.2972, 1.3507, 1.3823, 1.4
     };
 
-    vector<DoubleT> ten_x{ 0,
+    const vector<DoubleT> ten_x{ 0,
         0.01,
         0.02,
         0.06,
@@ -101,7 +101,7 @@ auto getDefaultMuscle() {
         0.46,
         0.48,
         0.5 };
-    vector<DoubleT> ten_y{ 0,
+    const vector<DoubleT> ten_y{ 0,
         0.094,
         0.2609,
         1.3087,
@@ -117,10 +117,10 @@ auto getDefaultMuscle() {
         13.0944,
         13.6556 };
 
-    CurveOffline act(act_x, act_y);
-    CurveOffline pas(pas_x, pas_y);
-    CurveOffline vel(vel_x, vel_y);
-    CurveOffline ten(ten_x, ten_y);
+    const CurveOffline act(act_x, act_y);
+    const CurveOffline pas(pas_x, pas_y);
+    const CurveOffline vel(vel_x, vel_y);
+    const CurveOffline ten(ten_x, ten_y);
 
     ceinms::Lloyd2019Muscle::Parameters p;
     p.damping = 0.1;
@@ -204,8 +204,9 @@ class Stage {
     vector<DoubleT> evaluate(DoubleT dt) noexcept {
         vector<DoubleT> ret;
         for (const auto &c : components_) {
-            for (auto &f : connections_[c->getName()])
+            for (auto &f : connections_[c->getName()]) {
                 f(*c);
+            }
             c->evaluate(dt);
             ret.emplace_back(c->getOutput().getPrimary());
         }
@@ -235,12 +236,12 @@ class Stage {
             }
         };
 
-        if (!childSocket.hasSlot())
-        connections_[childSocket.getName()].emplace_back(
-            function<void(T &)>(Command(parent)));
-        else
+        if (!childSocket.hasSlot()) {
+            connections_[childSocket.getName()].emplace_back(function<void(T &)>(Command(parent)));
+        } else {
             connections_[childSocket.getName()].emplace_back(
                 function<void(T &)>(CommandWithSlot(parent, childSocket)));
+        }
     }
 
     /*
@@ -268,21 +269,23 @@ class Stage {
         auto it = find_if(begin(components_), end(components_), [&name](const auto &e) {
             return e->getName() == name;
         });
-        if (it == end(components_)) throw invalid_argument("Component " + name + " not found");
+        if (it == end(components_)) { throw invalid_argument("Component " + name + " not found"); }
         return **it;
     }
 
     [[nodiscard]] auto getOutput() const noexcept {
         vector<typename T::Output> res;
-        for (const auto &e : components_)
+        for (const auto &e : components_) {
             res.emplace_back(e->getOutput());
+        }
         return res;
     }
 
-    auto getNames() const noexcept {
+    [[nodiscard]] auto getNames() const noexcept {
         vector<string> names;
-        for (const auto &c : components_)
+        for (const auto &c : components_) {
             names.emplace_back(c->getName());
+        }
         return names;
     }
 };
@@ -293,13 +296,12 @@ class Source {
   private:
     vector<T> input_;
     vector<string> names_;
-    size_t nInput_;
+    size_t nInput_{0};
 
   public:
     using type = T;
     using concept_t = source_t;
-    Source()
-        : nInput_(0) {}
+    Source() = default;
 
     void addInput(string name) noexcept {
         names_.emplace_back(name);
@@ -316,8 +318,7 @@ class Source {
 
     [[nodiscard]] T &get(string name) {
         auto it = find(begin(names_), end(names_), name);
-        if (it == end(names_))
-            throw invalid_argument("Input " + name + " not found");
+        if (it == end(names_)) { throw invalid_argument("Input " + name + " not found"); }
         size_t i = distance(begin(names_), it);
         return input_.at(i);
     }
@@ -330,9 +331,9 @@ class Source {
         return input_.at(i);
     }
 
-    auto getNames() const noexcept { return names_; }
+    [[nodiscard]] auto getNames() const noexcept { return names_; }
 
-    size_t getSize() const noexcept { return nInput_; }
+    [[nodiscard]] size_t getSize() const noexcept { return nInput_; }
 };
 
 template<typename InT, typename OutT>
@@ -358,11 +359,11 @@ class MultiInputMultiOutput {
     }
     void setFunction(function<vector<OutT>(const vector<InT> &)> fun) { fun_ = fun; }
     void setInput(const vector<InT> &input);
-    const vector<OutT> &getOutput() const { return output_; }
+    [[nodiscard]] const vector<OutT> &getOutput() const { return output_; }
     vector<OutT> &getInput() { return input_; }
 
     void setName(string name) { name_ = name; }
-    std::string getName() const { return name_; }
+    [[nodiscard]] std::string getName() const { return name_; }
     void evaluate(DoubleT) { output_ = fun_(input_); }
 };
 
@@ -524,10 +525,11 @@ void NMSmodel::connect(Socket parent, Socket child) {
 
 template<typename Parent, typename Child>
 void NMSmodel::connect() {
-    if constexpr (is_same<DataType, typename Parent::type>::value)
+    if constexpr (is_same<DataType, typename Parent::type>::value) {
         connect_<Parent, Stage<Child>>();
-    else
+    } else {
         connect_<Stage<Parent>, Stage<Child>>();
+    }
 }
 
 void NMSmodel::evaluate(DoubleT dt) noexcept {

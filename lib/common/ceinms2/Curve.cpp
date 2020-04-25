@@ -252,14 +252,15 @@ template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 size_t Curve<mode, T, N>::getAbscissaPoint(double xValue) const {
     const size_t n = x_.size();
     size_t k = 0;
-    if (n == 2)
+    if (n == 2) {
         k = 0;
-    else if (xValue <= x_.front())
+    } else if (xValue <= x_.front()) {
         k = 0;
-    else if (xValue >= x_.back())
+    } else if (xValue >= x_.back()) {
         k = n - 1;
-    else
+    } else {
         k = getAbscissaPoint(xValue, Int2Type<mode>());
+    }
 
     //  std::cout << "k, k1 "<< k << " " <<k1 << std::endl;
 
@@ -302,14 +303,15 @@ template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 double Curve<mode, T, N>::getValue(double xValue) const {
     size_t n = x_.size();
     double yValue(.0);
-    if (xValue < x_.at(0))
+    if (xValue < x_.at(0)) {
         yValue = y_.at(0);
-    else if (xValue > x_.at(n - 1))
+    } else if (xValue > x_.at(n - 1)) {
         yValue = y_.at(n - 1);
-    else if (n == 1)
+    } else if (n == 1) {
         yValue = x_.at(0);
-    else
+    } else {
         yValue = getValue(xValue, getAbscissaPoint(xValue), Int2Type<T>());
+    }
 
     return yValue;
 }

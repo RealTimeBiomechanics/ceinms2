@@ -55,9 +55,9 @@ class CircularVector {
     void clear();
     void push_back(const T &e);
     void pop_back();
-    unsigned getMaxsize() const { return N; }
-    unsigned size() const;
-    bool empty() const;
+    [[nodiscard]] unsigned getMaxsize() const { return N; }
+    [[nodiscard]] unsigned size() const;
+    [[nodiscard]] bool empty() const;
 
   private:
     bool isFull();

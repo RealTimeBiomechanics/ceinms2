@@ -15,36 +15,27 @@ class ExponentialActivation {
     using concept_t = component_t;    
     static constexpr std::string_view class_name = "ExponentialActivation";
     struct Parameters {
-        Parameters()
-            : c1(-0.5)
-            , c2(-0.5)
-            , shapefactor(-1)
-            , scalefactor(1) {}
-        DoubleT c1;
-        DoubleT c2;
-        DoubleT shapefactor;
-        DoubleT scalefactor;
+        Parameters() = default;
+        DoubleT c1{-0.5};
+        DoubleT c2{-0.5};
+        DoubleT shapefactor{-1};
+        DoubleT scalefactor{1.};
     };
 
     struct Input {
-        Input()
-            : excitation(0) {}
-
-        DoubleT excitation;
+        Input() = default;
+        DoubleT excitation{0.};
     };
 
     struct State {
-        State()
-            : neuralActivationT1(0.)
-            , neuralActivationT2(0.) {}
-        DoubleT neuralActivationT1, neuralActivationT2;
+        State() = default;
+        DoubleT neuralActivationT1{ 0. }, neuralActivationT2{0.};
     };
 
     struct Output {
-        Output()
-            : activation(0.) {}
-        DoubleT activation;
-        DoubleT getPrimary() const { return activation; }
+        Output() = default;
+        DoubleT activation{0.};
+        [[nodiscard]] DoubleT getPrimary() const { return activation; }
     };
 
     ExponentialActivation() { updateCoefficients(); };
@@ -65,14 +56,14 @@ class ExponentialActivation {
     // output;
     void calculateOutput();
 
-    std::string getName() const { return name_; }
+    [[nodiscard]] std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
     void evaluate(DoubleT dt);
     Parameters &updParameters() { return p_; }
-    Parameters getParameters() const { return p_; }
+    [[nodiscard]] Parameters getParameters() const { return p_; }
     State &updState() { return s_; }
-    State getState() const { return s_; }
-    Output getOutput() const { return o_; }
+    [[nodiscard]] State getState() const { return s_; }
+    [[nodiscard]] Output getOutput() const { return o_; }
 
   private:
     /*Calculates internal coefficients based on the current `Parameters`*/

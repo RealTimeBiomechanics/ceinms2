@@ -15,83 +15,51 @@ class Lloyd2019Muscle {
     using concept_t = component_t;
     static constexpr std::string_view class_name = "Lloyd2019Muscle";
     struct Parameters {
-        Parameters()
-            : optimalFiberLength(1.)
-            , pennationAngleAtOptimalFiberLength(0.)
-            , tendonSlackLength(0.8)
-            , maxContractionVelocity(5.)
-            , damping(0.1)
-            , maxIsometricForce(100.)
-            , strengthCoefficient(1.)
-            , percentageChange(0.15) {}
-
-
-        DoubleT optimalFiberLength;
-        DoubleT pennationAngleAtOptimalFiberLength;
-        DoubleT tendonSlackLength;
-        DoubleT maxContractionVelocity;
-        DoubleT damping;
-        DoubleT maxIsometricForce;
-        DoubleT strengthCoefficient;
-        DoubleT percentageChange;
-        CurveOffline forceVelocityCurve;
-        CurveOffline activeForceLengthCurve;
-        CurveOffline passiveForceLengthCurve;
-        CurveOffline tendonForceStrainCurve;
+        Parameters() = default;
+        DoubleT optimalFiberLength{1.};
+        DoubleT pennationAngleAtOptimalFiberLength{0.};
+        DoubleT tendonSlackLength{0.8};
+        DoubleT maxContractionVelocity{5.};
+        DoubleT damping{0.1};
+        DoubleT maxIsometricForce{100.};
+        DoubleT strengthCoefficient{1.};
+        DoubleT percentageChange{0.15};
+        CurveOffline forceVelocityCurve{};
+        CurveOffline activeForceLengthCurve{};
+        CurveOffline passiveForceLengthCurve{};
+        CurveOffline tendonForceStrainCurve{};
     };
 
     struct Input {
-        Input()
-            : activation(0)
-            , musculotendonLength(0) {}
-
-        DoubleT activation;
-        DoubleT musculotendonLength;
+        Input() = default;
+        DoubleT activation{0.};
+        DoubleT musculotendonLength{0.};
     };
 
     struct State {
-        State()
-            : fiberLength(0)
-            , fiberVelocity(0) {}
-
-        DoubleT fiberLength;
-        DoubleT fiberVelocity;
+        State() = default;
+        DoubleT fiberLength{0.};
+        DoubleT fiberVelocity{0.};
     };
 
     struct Output {
-        Output()
-            : optimalFiberLengthAtT(0)
-            , pennationAngle(0)
-            , fiberForce(0)
-            , activeForce(0)
-            , passiveForce(0)
-            , dampingForce(0)
-            , normalisedFiberLength(0)
-            , normalisedFiberLengthAtT(0)
-            , normalisedFiberVelocity(0)
-            , tendonLength(0)
-            , tendonStrain(0)
-            , tendonForce(0)
-            , fa(0)
-            , fv(0)
-            , fp(0) {}
-
-        DoubleT optimalFiberLengthAtT;
-        DoubleT pennationAngle;
-        DoubleT fiberForce;
-        DoubleT activeForce;
-        DoubleT passiveForce;
-        DoubleT dampingForce;
-        DoubleT normalisedFiberLength;
-        DoubleT normalisedFiberLengthAtT;
-        DoubleT normalisedFiberVelocity;
-        DoubleT tendonLength;
-        DoubleT tendonStrain;
-        DoubleT tendonForce;
-        DoubleT fa;
-        DoubleT fv;
-        DoubleT fp;
-        DoubleT getPrimary() const { return fiberForce; }
+        Output() = default;
+        DoubleT optimalFiberLengthAtT{0.};
+        DoubleT pennationAngle{0.};
+        DoubleT fiberForce{0.};
+        DoubleT activeForce{0.};
+        DoubleT passiveForce{0.};
+        DoubleT dampingForce{0.};
+        DoubleT normalisedFiberLength{0.};
+        DoubleT normalisedFiberLengthAtT{0.};
+        DoubleT normalisedFiberVelocity{0.};
+        DoubleT tendonLength{0.};
+        DoubleT tendonStrain{0.};
+        DoubleT tendonForce{0.};
+        DoubleT fa{0.};
+        DoubleT fv{0.};
+        DoubleT fp{0.};
+        [[nodiscard]] DoubleT getPrimary() const { return fiberForce; }
     };
 
     Lloyd2019Muscle(Parameters parameters)
@@ -112,7 +80,7 @@ class Lloyd2019Muscle {
     // from the internal state of the system and the input, calculate all the
     // output;
     void calculateOutput();
-    std::string getName() const { return name_; }
+    [[nodiscard]] std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
     // Convenience function that, from input and current state, calculate the
     // new state and all the output
@@ -276,8 +244,8 @@ DoubleT Lloyd2019Muscle::calculateNormalisedFiberVelocity(DoubleT fiberVelocity,
     const Lloyd2019Muscle::Parameters &p) {
     DoubleT normalisedFiberVelocity =
         fiberVelocity / (p.optimalFiberLength * p.maxContractionVelocity);
-    if (normalisedFiberVelocity > 1) normalisedFiberVelocity = 1;
-    if (normalisedFiberVelocity < -1) normalisedFiberVelocity = -1;
+    if (normalisedFiberVelocity > 1) { normalisedFiberVelocity = 1; }
+    if (normalisedFiberVelocity < -1) { normalisedFiberVelocity = -1; }
     return normalisedFiberVelocity;
 }
 
@@ -285,8 +253,8 @@ DoubleT Lloyd2019Muscle::calculatePennationAngle(DoubleT fiberLength,
     const Lloyd2019Muscle::Parameters &p) {
     DoubleT value{ p.optimalFiberLength
                    * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
-    if (value < 0) value = 0;
-    if (value > 0.99) value = 0.99;
+    if (value < 0) { value = 0; }
+    if (value > 0.99) { value = 0.99; }
     return asin(value);
 }
 
@@ -304,7 +272,7 @@ DoubleT Lloyd2019Muscle::calculateTendonStrain(DoubleT musculotendonLength,
         (calculateTendonLength(musculotendonLength, fiberLength, p)
             - p.tendonSlackLength)
         / p.tendonSlackLength;
-    if (tendonStrain < 0.) tendonStrain = 0;
+    if (tendonStrain < 0.) { tendonStrain = 0; }
     return tendonStrain;
 }
 
@@ -328,7 +296,7 @@ DoubleT Lloyd2019Muscle::calculateFiberForce(DoubleT activation,
                             + p.damping * normalisedFiberVelocity)
                         * cos(pennationAngle) };
     // clamp muscle force
-    if (fiberForce < 0.) fiberForce = 0;
+    if (fiberForce < 0.) { fiberForce = 0; }
     return fiberForce;
 }
 

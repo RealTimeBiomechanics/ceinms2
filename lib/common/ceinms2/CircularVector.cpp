@@ -30,7 +30,6 @@
 using std::vector;
 #include <iterator>
 #include <iostream>
-#include <stdlib.h>
 
 namespace ceinms {
 // const unsigned DEFAULT_MAX_SIZE = 15;
@@ -159,7 +158,6 @@ template<typename T, size_t N>
 bool CircularVector<T, N>::isEmpty() {
     return (count_ == 0);
 }
-
 
 template<typename T, size_t N>
 bool CircularVector<T, N>::empty() const {

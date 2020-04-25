@@ -30,7 +30,7 @@
 #define WDBsolver_h
 
 #include <limits>
-#include <math.h>
+#include <cmath>
 
 template<typename T>
 int sgn(T val) {
@@ -47,11 +47,23 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
     const int ITMAX = 100;
     constexpr double EPS = std::numeric_limits<double>::epsilon();
 
-    double a = x1, b = x2, c = x2, d = std::numeric_limits<double>::max(),
-           e = std::numeric_limits<double>::max(), fa = func(a), fb = func(b),
-           fc, p, q, r, s, tol1, xm;
-    if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0))
+    double a = x1;
+    double b = x2;
+    double c = x2;
+    double d = std::numeric_limits<double>::max();
+    double e = std::numeric_limits<double>::max();
+    double fa = func(a);
+    double fb = func(b);
+    double fc;
+    double p;
+    double q;
+    double r;
+    double s;
+    double tol1;
+    double xm;
+    if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
         throw("Root must be bracketed in wdbSolve");
+    }
     fc = fb;
     for (int iter = 0; iter < ITMAX; iter++) {
         if ((fb > 0.0 && fc > 0.0) || (fb < 0.0 && fc < 0.0)) {
@@ -70,7 +82,7 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
 
         tol1 = 2.0 * EPS * fabs(b) + 0.5 * tol;
         xm = 0.5 * (c - b);
-        if (fabs(xm) <= tol1 || fb == 0.0) return b;
+        if (fabs(xm) <= tol1 || fb == 0.0) { return b; }
         if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
             s = fb / fa;
             if (a == c) {
@@ -82,7 +94,7 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
                 p = s * (2.0 * xm * q * (q - r) - (b - a) * (r - 1.0));
                 q = (q - 1.0) * (r - 1.0) * (s - 1.0);
             }
-            if (p > 0.0) q = -q;
+            if (p > 0.0) { q = -q; }
             p = fabs(p);
             double min1 = 3.0 * xm * q - fabs(tol1 * q);
             double min2 = abs(e * q);
@@ -99,10 +111,11 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
         }
         a = b;
         fa = fb;
-        if (fabs(d) > tol1)
+        if (fabs(d) > tol1) {
             b += d;
-        else
+        } else {
             b += sign(tol1, xm);
+        }
         fb = func(b);
     }
     throw("Maximum number of iterations exceeded in zbrent");

@@ -59,7 +59,7 @@ struct Select {
 
 template<typename T, typename U>
 struct Select<CurveMode::Online, T, U> {
-    typedef U Result;
+    using Result = U;
 };
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
@@ -73,14 +73,14 @@ template<CurveMode::Mode mode,
     size_t N = 15>
 class Curve {
   public:
-    typedef typename Select<mode,
+    using VectorType = typename Select<mode,
         std::vector<double>,
-        CircularVector<double, N>>::Result VectorType;
+        CircularVector<double, N>>::Result;
     Curve();
     // compute coefficients
     Curve(const std::vector<double> &x, const std::vector<double> &y);
     Curve(const Curve &orig);
-    virtual ~Curve() {}
+    virtual ~Curve() = default;
     Curve &operator=(const Curve &orig);
     void reset();
     // add a new points and compute again coefficients
@@ -94,46 +94,42 @@ class Curve {
     void removeLastPointNoUpdate();// remove last point without computing the
                                    // coefficients again
     // interpolation
-    double getValue(double xValue) const;
-    double getFirstDerivative(double xValue) const;
-    double getSecondDerivative(double xValue) const;
-    double getMinX() const {
+    [[nodiscard]] double getValue(double xValue) const;
+    [[nodiscard]] double getFirstDerivative(double xValue) const;
+    [[nodiscard]] double getSecondDerivative(double xValue) const;
+    [[nodiscard]] double getMinX() const {
         if (!x_.empty()) return x_.front();
         return 0;
     }
-    double getMaxX() const {
+    [[nodiscard]] double getMaxX() const {
         if (!x_.empty()) return x_.back();
         return 0;
     }
 
-    VectorType getXNodes() const { return x_; }
-    VectorType getYNodes() const { return y_; }
+    [[nodiscard]] VectorType getXNodes() const { return x_; }
+    [[nodiscard]] VectorType getYNodes() const { return y_; }
 
     friend std::ostream &operator<<<>(std::ostream &output, const Curve &c);
     bool empty() { return b_.empty(); }
-    std::size_t getNoElements() const { return x_.size(); }
+    [[nodiscard]] std::size_t getNoElements() const { return x_.size(); }
 
   private:
     void computeCoefficients(Int2Type<CurveMode::Cubic>);
     void computeCoefficients(Int2Type<CurveMode::Linear>);
 
-    double getValue(double xValue,
-        size_t abscissaPoint,
-        Int2Type<CurveMode::Cubic>) const;
-    double getValue(double xValue,
-        size_t abscissaPoint,
-        Int2Type<CurveMode::Linear>) const;
+    [[nodiscard]] double
+        getValue(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const;
+    [[nodiscard]] double
+        getValue(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const;
 
-    double getFirstDerivative(double xValue,
-        size_t abscissaPoint,
-        Int2Type<CurveMode::Cubic>) const;
-    double getFirstDerivative(double xValue,
-        size_t abscissaPoint,
-        Int2Type<CurveMode::Linear>) const;
+    [[nodiscard]] double
+        getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const;
+    [[nodiscard]] double
+        getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const;
 
-    size_t getAbscissaPoint(double xValue) const;
-    size_t getAbscissaPoint(double xValue, Int2Type<CurveMode::Online>) const;
-    size_t getAbscissaPoint(double xValue, Int2Type<CurveMode::Offline>) const;
+    [[nodiscard]] size_t getAbscissaPoint(double xValue) const;
+    [[nodiscard]] size_t getAbscissaPoint(double xValue, Int2Type<CurveMode::Online>) const;
+    [[nodiscard]] size_t getAbscissaPoint(double xValue, Int2Type<CurveMode::Offline>) const;
 
 
     VectorType x_;
