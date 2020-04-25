@@ -1,6 +1,7 @@
 #ifndef ceinms2_Types_h
 #define ceinms2_Types_h
 #include <string_view>
+
 using DoubleT = double;
 enum class Concept {Input, Component, Component_MIMO, Stage, Source};
 template<Concept>

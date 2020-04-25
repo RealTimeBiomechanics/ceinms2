@@ -7,34 +7,36 @@
 #include "ceinms2/Types.h"
 namespace ceinms {
 
+
+
 class ExponentialActivation {
   public:
-    //this is required to allow some of the template magic in the `NMSmodel` class to work
-    //it might be removed once we move to Concepts
+    // this is required to allow some of the template magic in the `NMSmodel` class to work
+    // it might be removed once we move to Concepts
     using type = nullptr_t;
-    using concept_t = component_t;    
+    using concept_t = component_t;
     static constexpr std::string_view class_name = "ExponentialActivation";
     struct Parameters {
         Parameters() = default;
-        DoubleT c1{-0.5};
-        DoubleT c2{-0.5};
-        DoubleT shapefactor{-1};
-        DoubleT scalefactor{1.};
+        DoubleT c1{ -0.5 };
+        DoubleT c2{ -0.5 };
+        DoubleT shapefactor{ -1 };
+        DoubleT scalefactor{ 1. };
     };
 
     struct Input {
         Input() = default;
-        DoubleT excitation{0.};
+        DoubleT excitation{ 0. };
     };
 
     struct State {
         State() = default;
-        DoubleT neuralActivationT1{ 0. }, neuralActivationT2{0.};
+        DoubleT neuralActivationT1{ 0. }, neuralActivationT2{ 0. };
     };
 
     struct Output {
         Output() = default;
-        DoubleT activation{0.};
+        DoubleT activation{ 0. };
         [[nodiscard]] DoubleT getPrimary() const { return activation; }
     };
 
@@ -84,15 +86,12 @@ void ExponentialActivation::setInput(DoubleT excitation) {
     i_.excitation = excitation;
 }
 
-void ExponentialActivation::setInput(Input input) {
-    setInput(input.excitation);
-}
+void ExponentialActivation::setInput(Input input) { setInput(input.excitation); }
 
 void ExponentialActivation::setState(State state) { s_ = state; }
 
 void ExponentialActivation::integrate(DoubleT) {
-    sNew_.neuralActivationT1 = (alpha_ * i_.excitation)
-                               - (beta1_ * s_.neuralActivationT1)
+    sNew_.neuralActivationT1 = (alpha_ * i_.excitation) - (beta1_ * s_.neuralActivationT1)
                                - (beta2_ * s_.neuralActivationT2);
 }
 
@@ -102,8 +101,7 @@ void ExponentialActivation::validateState() {
 }
 
 void ExponentialActivation::calculateOutput() {
-    o_.activation = p_.scalefactor
-                    * (std::exp(p_.shapefactor * s_.neuralActivationT1) - 1)
+    o_.activation = p_.scalefactor * (std::exp(p_.shapefactor * s_.neuralActivationT1) - 1)
                     / (expShapefactor_ - 1);
 }
 
@@ -119,6 +117,12 @@ void ExponentialActivation::updateCoefficients() {
     alpha_ = 1 + beta1_ + beta2_;
     expShapefactor_ = std::exp(p_.shapefactor);
 }
+
+
+void connectSocket(const Excitation &parent, ExponentialActivation &child) {
+    child.setInput(parent.value);
+}
+
 
 }// namespace ceinms
 
