@@ -61,7 +61,6 @@ class Lloyd2019Muscle {
         DoubleT fa{ 0. };
         DoubleT fv{ 0. };
         DoubleT fp{ 0. };
-        [[nodiscard]] DoubleT getPrimary() const { return fiberForce; }
     };
 
     Lloyd2019Muscle(Parameters parameters)
@@ -95,7 +94,10 @@ class Lloyd2019Muscle {
     [[nodiscard]] const State &getState() const { return s_; }
     [[nodiscard]] State &getState() { return s_; }
     [[nodiscard]] const Output &getOutput() const { return o_; }
-
+    template<typename T, std::enable_if_t<std::is_same<T, Force>::value, int> = 0>
+    [[nodiscard]] Force getOutput() const {
+        return o_.fiberForce;
+    }
     /* calculateXYZ functions perform calculations and return the calculated
      * value*/
     static DoubleT calculateFiberVelocityFromFiberLength(DoubleT previousFiberLength,
@@ -292,12 +294,19 @@ DoubleT Lloyd2019Muscle::calculateTendonForce(DoubleT musculotendonLength,
     return tendonForce;
 }
 
+
+//This can be made generic when Concepts are available
 void connectSocket(const ExponentialActivation &parent, Lloyd2019Muscle &child) {
-    child.setActivation(parent.getOutput().activation);
+    child.setInput(parent.getOutput<Activation>());
+}
+
+
+void connectSocket(const Activation &parent, Lloyd2019Muscle &child) {
+    child.setInput(parent);
 }
 
 void connectSocket(const MusculotendonLength &parent, Lloyd2019Muscle &child) {
-    child.setMusculotendonLength(parent.value);
+    child.setInput(parent);
 }
 
 }// namespace ceinms

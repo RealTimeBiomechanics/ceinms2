@@ -40,28 +40,14 @@ auto getDefaultMuscle() {
     const vector<DoubleT> pas_x{ 1, 1.116, 1.22, 1.324, 1.428, 1.61, 2 };
     const vector<DoubleT> pas_y{ 0, 0.0208, 0.0604, 0.1536, 0.3117, 0.7448, 1.8571 };
 
-    const vector<DoubleT> vel_x{
-        -1, -0.624, -0.312, -0.104, 0, 0.104, 0.312, 0.624, 0.832, 0.988
-    };
+    const vector<DoubleT> vel_x{ -1, -0.624, -0.312, -0.104, 0, 0.104, 0.312, 0.624, 0.832, 0.988 };
     const vector<DoubleT> vel_y{
         0, 0.0939, 0.3174, 0.6162, 1, 1.2278, 1.2972, 1.3507, 1.3823, 1.4
     };
 
-    const vector<DoubleT> ten_x{ 0,
-        0.01,
-        0.02,
-        0.06,
-        0.1,
-        0.14,
-        0.18,
-        0.24,
-        0.32,
-        0.38,
-        0.42,
-        0.44,
-        0.46,
-        0.48,
-        0.5 };
+    const vector<DoubleT> ten_x{
+        0, 0.01, 0.02, 0.06, 0.1, 0.14, 0.18, 0.24, 0.32, 0.38, 0.42, 0.44, 0.46, 0.48, 0.5
+    };
     const vector<DoubleT> ten_y{ 0,
         0.094,
         0.2609,
@@ -107,7 +93,6 @@ auto getDefaultActivation() {
     return act;
 }
 
-
 namespace ceinms {
 
 template<int N>
@@ -135,7 +120,7 @@ class BypassComponent {
     void setInput(Activation input) { activation_ = input.value; }
     void evaluate(DoubleT) {
         if constexpr (value == 0) {
-            o_.output = excitation_ +1;
+            o_.output = excitation_ + 1;
             cout << "input excitation: " << excitation_ << " output: " << o_.output << endl;
         } else if constexpr (value == 1) {
             o_.output = activation_ + 10;
@@ -149,16 +134,16 @@ class BypassComponent {
             o_.output = 0;
         }
     }
-    const Output& getOutput() const { return o_; }
+    const Output &getOutput() const { return o_; }
 };
-
 
 void connectSocket(const Excitation &parent, BypassComponent<0> &child) {
     child.setInput(parent);
 }
 
-void connectSocket(const Activation &parent, BypassComponent<1> &child) { child.setInput(parent); }
-
+void connectSocket(const Activation &parent, BypassComponent<1> &child) {
+    child.setInput(parent);
+}
 
 void connectSocket(const MusculotendonLength &parent, BypassComponent<2> &child) {
     child.setInput(parent);
@@ -167,8 +152,6 @@ void connectSocket(const MusculotendonLength &parent, BypassComponent<2> &child)
 void connectSocket(const BypassComponent<0> &parent, BypassComponent<1> &child) {
     child.setInput(Activation(parent.getOutput().getPrimary()));
 }
-
-
 }// namespace ceinms
 
 int testConnectionFlow() {
@@ -177,11 +160,11 @@ int testConnectionFlow() {
     using ActivationBypass = BypassComponent<1>;
     using MTLBypass = BypassComponent<2>;
 
-    try { 
+    try {
         cout << "------------TEST 1.1-----------\n";
         cout << "Connecting a single input to a single component and testing the correctness of "
                 "the output\n";
-        using MyNMSmodel = NMSmodel<ExcitationBypass>; 
+        using MyNMSmodel = NMSmodel<ExcitationBypass>;
         MyNMSmodel model;
         ExcitationBypass exct;
         exct.setName("muscle1");
@@ -220,9 +203,9 @@ int testConnectionFlow() {
         model.evaluate(0.1);
         if (model.getOutput<ActivationBypass>().at(0).getPrimary() != 12)
             throw std::logic_error("Wrong connection flow\n");
-       model.setInput(vector{ Excitation{ 3 } });
-       model.evaluate(0.1);
-       if (model.getOutput<ActivationBypass>().at(0).getPrimary() != 14)
+        model.setInput(vector{ Excitation{ 3 } });
+        model.evaluate(0.1);
+        if (model.getOutput<ActivationBypass>().at(0).getPrimary() != 14)
             throw std::logic_error("Wrong connection flow\n");
 
     } catch (const std::exception &e) {
@@ -288,7 +271,7 @@ int testConnectionFlow() {
         model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1a");
         model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1b");
         model.connect<MusculotendonLength, MTLBypass>();
-        model.setInput(vector{ Excitation{ 1 }});
+        model.setInput(vector{ Excitation{ 1 } });
         model.setInput(vector{ MusculotendonLength{ 1.1 }, MusculotendonLength{ 3.1 } });
         model.evaluate(0.1);
         auto out1 = model.getOutput<ActivationBypass>();
@@ -302,12 +285,12 @@ int testConnectionFlow() {
         return 1;
     }
     return 0;
-
 }
 
-
 int testConnections() {
-    using MyNMSmodel = NMSmodel<ExponentialActivation, Lloyd2019Muscle, MultiInputMultiOutput<Excitation,Excitation>>;
+    using MyNMSmodel = NMSmodel<ExponentialActivation,
+        Lloyd2019Muscle,
+        MultiInputMultiOutput<Excitation, Excitation>>;
     try {
         /*Test if automatic connection between input and component and between component and
          * component works well. The matching is based on naming.
@@ -360,7 +343,8 @@ int testConnections() {
     }
     try {
         /*Test if automatic connection between input and component and between component and
-         * component works well. In this test we are going to create a model with a different number of input and components.
+         * component works well. In this test we are going to create a model with a different number
+         * of input and components.
          */
         cout << "------------TEST 3------------\n";
         MyNMSmodel model;
@@ -395,7 +379,7 @@ int testConnections() {
         cout << "------------TEST 4------------\n";
         MyNMSmodel model;
         ceinms::ExponentialActivation act(getDefaultActivation());
-        MultiInputMultiOutput<Excitation, Excitation> mimo(2,3);
+        MultiInputMultiOutput<Excitation, Excitation> mimo(2, 3);
         mimo.setName("mimo");
         model.addComponent<MultiInputMultiOutput<Excitation, Excitation>>(mimo);
         for (int i(0); i < 3; ++i) {
@@ -414,14 +398,13 @@ int testConnections() {
         model.connect<Excitation, MultiInputMultiOutput<Excitation, Excitation>>(
             "mtu1", { "mimo", 1 });
 
-
         cout << "# Connect MultiInputMultiOutput component to ExponentialActivation" << endl;
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
-            { "mimo", 0 }, "mtu0" );
+            { "mimo", 0 }, "mtu0");
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
             { "mimo", 1 }, "mtu1");
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
-           { "mimo", 2 }, "mtu2");
+            { "mimo", 2 }, "mtu2");
 
     } catch (const std::exception &e) {
         std::cout << e.what();
@@ -431,14 +414,15 @@ int testConnections() {
     return 0;
 }
 
-int testConcepts() { 
+int testConcepts() {
     static_assert(is_same<typename Excitation::concept_t, input_t>::value);
     static_assert(is_same<typename MusculotendonLength::concept_t, input_t>::value);
     static_assert(is_same<typename MomentArm::concept_t, input_t>::value);
     static_assert(is_same<typename ceinms::ExponentialActivation::concept_t, component_t>::value);
     static_assert(is_same<typename ceinms::Lloyd2019Muscle::concept_t, component_t>::value);
     static_assert(is_same<typename Stage<ceinms::Lloyd2019Muscle>::concept_t, stage_t>::value);
-    static_assert(is_same<typename Stage<ceinms::ExponentialActivation>::concept_t, stage_t>::value);
+    static_assert(
+        is_same<typename Stage<ceinms::ExponentialActivation>::concept_t, stage_t>::value);
     static_assert(is_same<typename Source<Excitation>::concept_t, source_t>::value);
     static_assert(is_same<typename Source<MusculotendonLength>::concept_t, source_t>::value);
     static_assert(

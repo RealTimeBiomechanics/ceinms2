@@ -122,9 +122,9 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
             DoubleT fl = flStart + dFl * iFl;
             DoubleT fv = fvStart + dFv * iFv;
             DoubleT u =
-                muscle.calculateFiberForce(1., fl, fv, muscle.updParameters());
+                muscle.calculateFiberForce(1., fl, fv, muscle.getParameters());
             DoubleT t =
-                muscle.calculateTendonForce(2, fl, muscle.updParameters());
+                muscle.calculateTendonForce(2, fl, muscle.getParameters());
             outF << fl << ", ";
             outF << fv << ", ";
             outF << u << ", ";
@@ -136,22 +136,21 @@ void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
 void printStep(ceinms::Lloyd2019Muscle &muscle) {
     std::ofstream outF("outStepResponse.csv");
     DoubleT mtuLStart = 2.1, mtuLStop = 2.3, activation = 0.5;
-    muscle.setInput(activation, mtuLStart);
+    muscle.setActivation(activation);
+    muscle.setMusculotendonLength(mtuLStart);
     muscle.equilibrate();
     for (int i{ 0 }; i < 100; ++i) {
-        muscle.setInput(activation, mtuLStart);
-        muscle.integrate(0.001);
-        muscle.validateState();
-        muscle.calculateOutput();
+        muscle.setActivation(activation);
+        muscle.setMusculotendonLength(mtuLStart);
+        muscle.evaluate(0.001);
         outF << muscle.getOutput().fiberForce << ", "
              << muscle.getOutput().normalisedFiberLength << endl;
     }
 
     for (int i{ 0 }; i < 100; ++i) {
-        muscle.setInput(activation, mtuLStop);
-        muscle.integrate(0.001);
-        muscle.validateState();
-        muscle.calculateOutput();
+        muscle.setActivation(activation);
+        muscle.setMusculotendonLength(mtuLStop);
+        muscle.evaluate(0.001);
         outF << muscle.getOutput().fiberForce << ", "
              << muscle.getOutput().normalisedFiberLength << endl;
     }
@@ -247,10 +246,10 @@ int main_() {
         13.0944,
         13.6556 };
 
-    CurveOffline act(act_x, act_y);
-    CurveOffline pas(pas_x, pas_y);
-    CurveOffline vel(vel_x, vel_y);
-    CurveOffline ten(ten_x, ten_y);
+    ceinms::CurveOffline act(act_x, act_y);
+    ceinms::CurveOffline pas(pas_x, pas_y);
+    ceinms::CurveOffline vel(vel_x, vel_y);
+    ceinms::CurveOffline ten(ten_x, ten_y);
 
     ceinms::Lloyd2019Muscle::Parameters p;
     p.damping = 0.1;
@@ -380,10 +379,10 @@ void runTrial(ceinms::DataTable<double> &trial) {
         13.0944,
         13.6556 };
 
-    CurveOffline act(act_x, act_y);
-    CurveOffline pas(pas_x, pas_y);
-    CurveOffline vel(vel_x, vel_y);
-    CurveOffline ten(ten_x, ten_y);
+    ceinms::CurveOffline act(act_x, act_y);
+    ceinms::CurveOffline pas(pas_x, pas_y);
+    ceinms::CurveOffline vel(vel_x, vel_y);
+    ceinms::CurveOffline ten(ten_x, ten_y);
 
     ceinms::Lloyd2019Muscle::Parameters p;
     p.damping = 0.1;
@@ -413,7 +412,8 @@ void runTrial(ceinms::DataTable<double> &trial) {
         DoubleT dt = 0.001;
         if (i > 0) dt = times.at(i) - times.at(i - 1);
         DoubleT mtLength = muscleRestLength + posOffset + disp * 1.0e-3;
-        muscle.setInput(1.0, mtLength);
+        muscle.setActivation(1.0);
+        muscle.setMusculotendonLength(mtLength);
         if (i == 0) muscle.equilibrate();
         muscle.integrate(dt);
         muscle.validateState();
@@ -441,7 +441,7 @@ void runMillardBenchmark() {
     auto normalisedDisplacement =
         normalisedDisplacementDataTable.getColumn("displacement_mm");
     auto times = normalisedDisplacementDataTable.getTimeColumn();
-    CurveOffline displacementCurve{ times, normalisedDisplacement };
+    ceinms::CurveOffline displacementCurve{ times, normalisedDisplacement };
 
     for (auto &[trialName, disp] : trialToDisplacement) {
         auto currentTrial =

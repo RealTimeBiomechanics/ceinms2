@@ -37,7 +37,6 @@ class ExponentialActivation {
     struct Output {
         Output() = default;
         DoubleT activation{ 0. };
-        [[nodiscard]] DoubleT getPrimary() const { return activation; }
     };
 
     ExponentialActivation() { updateCoefficients(); };
@@ -69,7 +68,7 @@ class ExponentialActivation {
 
     template<typename T, std::enable_if_t<std::is_same<T, Activation>::value, int> = 0>
     [[nodiscard]] Activation getOutput() const {
-        return o_.activation();
+        return Activation{ o_.activation };
     }
 
   private:
