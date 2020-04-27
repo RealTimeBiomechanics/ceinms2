@@ -7,8 +7,6 @@
 #include "ceinms2/Types.h"
 namespace ceinms {
 
-
-
 class ExponentialActivation {
   public:
     // this is required to allow some of the template magic in the `NMSmodel` class to work

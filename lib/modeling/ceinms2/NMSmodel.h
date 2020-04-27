@@ -52,14 +52,16 @@ void connectSocket(const T &, U &, ...) {
 
 class Socket {
   public:
-    Socket(char name[])
-        : name_(name) {}
     Socket(const std::string &name)
         : name_(name) {}
     Socket(const std::string &name, size_t slot)
         : name_(name)
         , slot_(slot)
         , hasSlot_(true) {}
+    Socket(char name[])
+        : Socket(std::string(name)) {}
+    Socket(char name[], size_t slot)
+        : Socket(std::string(name), slot){}
     [[nodiscard]] std::string getName() const { return name_; }
     [[nodiscard]] size_t getSlot() const { return slot_; }
     [[nodiscard]] bool hasSlot() const { return hasSlot_; }
@@ -330,14 +332,14 @@ class NMSmodel {
         std::sort(parentComponentNames.begin(), parentComponentNames.end());
         std::sort(childComponentNames.begin(), childComponentNames.end());
 
-        std::vector<string> commonNames;
+        std::vector<std::string> commonNames;
 
         std::set_intersection(parentComponentNames.begin(),
             parentComponentNames.end(),
             childComponentNames.begin(),
             childComponentNames.end(),
             std::back_inserter(commonNames));
-        for (const string &name : commonNames) {
+        for (const std::string &name : commonNames) {
             connect<T, typename U::type>(name, name);
         }
     }
@@ -353,7 +355,7 @@ class NMSmodel {
         std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << std::endl;
 
-        auto input = get<Source<T>>(sources_).getPtr(parent.getName());
+        auto input = std::get<Source<T>>(sources_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, input);
     }
 
