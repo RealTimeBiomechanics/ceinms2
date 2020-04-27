@@ -96,7 +96,7 @@ class Lloyd2019Muscle {
     [[nodiscard]] const Output &getOutput() const { return o_; }
     template<typename T, std::enable_if_t<std::is_same<T, Force>::value, int> = 0>
     [[nodiscard]] Force getOutput() const {
-        return o_.fiberForce;
+        return Force{ o_.fiberForce };
     }
     /* calculateXYZ functions perform calculations and return the calculated
      * value*/
@@ -299,7 +299,6 @@ DoubleT Lloyd2019Muscle::calculateTendonForce(DoubleT musculotendonLength,
 void connectSocket(const ExponentialActivation &parent, Lloyd2019Muscle &child) {
     child.setInput(parent.getOutput<Activation>());
 }
-
 
 void connectSocket(const Activation &parent, Lloyd2019Muscle &child) {
     child.setInput(parent);

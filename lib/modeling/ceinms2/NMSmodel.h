@@ -47,32 +47,27 @@ void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSl
 
 template<typename T, typename U>
 void connectSocket(const T &, U &, ...) {
-    cout << "No socket connection" << endl;
+    std::cout << "No socket connection" << std::endl;
 }
 
 class Socket {
   public:
     Socket(char name[])
-        : name_(name)
-        , hasSlot_(false)
-        , slot_(0) {}
+        : name_(name) {}
     Socket(const std::string &name)
-        : name_(name)
-        , hasSlot_(false)
-        , slot_(0) {}
-
+        : name_(name) {}
     Socket(const std::string &name, size_t slot)
         : name_(name)
-        , hasSlot_(true)
-        , slot_(slot) {}
+        , slot_(slot)
+        , hasSlot_(true) {}
     [[nodiscard]] std::string getName() const { return name_; }
     [[nodiscard]] size_t getSlot() const { return slot_; }
     [[nodiscard]] bool hasSlot() const { return hasSlot_; }
 
   private:
     std::string name_;
-    size_t slot_;
-    bool hasSlot_;
+    size_t slot_{ 0 };
+    bool hasSlot_{ false };
 };
 
 std::ostream &operator<<(std::ostream &os, const Socket &sock) {
@@ -123,10 +118,10 @@ class Stage {
         };
 
         if (!childSocket.hasSlot()) {
-            connections_[childSocket.getName()].emplace_back(function<void(T&)>(Command(parent)));
+            connections_[childSocket.getName()].emplace_back(std::function<void(T&)>(Command(parent)));
         } else {
             connections_[childSocket.getName()].emplace_back(
-                function<void(T&)>(CommandWithSlot(parent, childSocket)));
+                std::function<void(T&)>(CommandWithSlot(parent, childSocket)));
         }
     }
 
@@ -310,14 +305,14 @@ class NMSmodel {
         std::sort(parentComponentNames.begin(), parentComponentNames.end());
         std::sort(childComponentNames.begin(), childComponentNames.end());
 
-        std::vector<string> commonNames;
+        std::vector<std::string> commonNames;
 
         std::set_intersection(parentComponentNames.begin(),
             parentComponentNames.end(),
             childComponentNames.begin(),
             childComponentNames.end(),
             std::back_inserter(commonNames));
-        for (const string &name : commonNames) {
+        for (const std::string &name : commonNames) {
             connect<typename T::type, typename U::type>(name, name);
         }
     }
@@ -355,8 +350,8 @@ class NMSmodel {
                         || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connect_(Socket parent, Socket child) {
-        cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
-             << child << endl;
+        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
+             << child << std::endl;
 
         auto input = get<Source<T>>(sources_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, input);
@@ -372,8 +367,8 @@ class NMSmodel {
                         || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connect_(Socket parent, Socket child) {
-        cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
-             << child << endl;
+        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
+             << child << std::endl;
         auto parentComponent = get<Stage<T>>(stages_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, parentComponent);
     }

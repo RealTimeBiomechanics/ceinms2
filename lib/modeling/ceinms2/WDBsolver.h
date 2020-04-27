@@ -97,7 +97,8 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
             if (p > 0.0) { q = -q; }
             p = fabs(p);
             double min1 = 3.0 * xm * q - fabs(tol1 * q);
-            double min2 = abs(e * q);
+            //I changed this from abs to fabs.. not sure if the cast was intended
+            double min2 = fabs(e * q);
             if (2.0 * p < (min1 < min2 ? min1 : min2)) {
                 e = d;
                 d = p / q;
