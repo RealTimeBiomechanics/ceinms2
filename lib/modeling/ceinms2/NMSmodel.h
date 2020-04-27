@@ -10,8 +10,6 @@
 #include <memory>
 #include <map>
 #include "ceinms2/Types.h"
-#include "ceinms2/ExponentialActivation.h"
-#include "ceinms2/Lloyd2019Muscle.h"
 
 namespace ceinms {
 
@@ -86,8 +84,8 @@ std::ostream &operator<<(std::ostream &os, const Socket &sock) {
 template<typename T>
 class Stage {
   private:
-    std::vector<std::unique_ptr<T>> components_;
-    std::map<std::string, std::vector<std::function<void(T &)>>> connections_;
+    std::vector<std::shared_ptr<T>> components_;
+    std::map<std::string, std::vector<std::function<void(T&)>>> connections_;
 
   public:
     using type = T;
@@ -95,59 +93,56 @@ class Stage {
     /*Makes an internal copy of `component`*/
     void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
 
-    std::vector<DoubleT> evaluate(DoubleT dt) noexcept {
-        std::vector<DoubleT> ret;
+    void evaluate(DoubleT dt) noexcept {
         for (const auto &c : components_) {
             for (auto &f : connections_[c->getName()]) {
                 f(*c);
             }
             c->evaluate(dt);
-            ret.emplace_back(c->getOutput().getPrimary());
         }
-        return ret;
     }
 
     /*Need to check what slot is used to connect to a parent with multi input multi output*/
     template<typename U>
-    void connectToParent(Socket childSocket, const U &parent) noexcept {
+    void connectToParent(Socket childSocket, const std::shared_ptr<U> parent) noexcept {
+
         struct Command {
-            Command(const U &parent)
+            Command(const std::shared_ptr<U> parent)
                 : p(parent) {}
-            const U &p;
-            void operator()(T &child) { connectSocket(p, child); }
+            const std::shared_ptr<U> p;
+            void operator()(T &child) { connectSocket(*p, child); }
         };
 
         struct CommandWithSlot {
-            CommandWithSlot(const U &parent, Socket childSocket)
+            CommandWithSlot(const std::shared_ptr<U> parent, Socket childSocket)
                 : p(parent)
                 , s(childSocket) {}
-            const U &p;
+            const std::shared_ptr<U> p;
             const Socket s;
-            void operator()(T &child) { connectSocket<U, T>(p, child, s.getSlot()); }
+            void operator()(T &child) { connectSocket<U, T>(*p, child, s.getSlot()); }
         };
 
         if (!childSocket.hasSlot()) {
-            connections_[childSocket.getName()].emplace_back(function<void(T &)>(Command(parent)));
+            connections_[childSocket.getName()].emplace_back(function<void(T&)>(Command(parent)));
         } else {
             connections_[childSocket.getName()].emplace_back(
-                function<void(T &)>(CommandWithSlot(parent, childSocket)));
+                function<void(T&)>(CommandWithSlot(parent, childSocket)));
         }
     }
 
     [[nodiscard]] const T &get(std::string name) const {
-        auto it = std::find_if(std::cbegin(components_), std::cend(components_), [&name](const auto &e) {
-            return e->getName() == name;
-        });
-        if (it == std::cend(components_)) throw std::invalid_argument("Component " + name + " not found");
-        return **it;
+        auto idx{ getIndex(name) };
+        return *components_.at(idx);
     }
 
     [[nodiscard]] T &get(std::string name) {
-        auto it = std::find_if(std::begin(components_), std::end(components_), [&name](const auto &e) {
-            return e->getName() == name;
-        });
-        if (it == std::end(components_)) { throw std::invalid_argument("Component " + name + " not found"); }
-        return **it;
+        auto idx{ getIndex(name) };
+        return *components_.at(idx);
+    }
+
+    [[nodiscard]] auto getPtr(std::string name) {
+        auto idx{ getIndex(name) };
+        return components_.at(idx);
     }
 
     [[nodiscard]] auto getOutput() const noexcept {
@@ -165,13 +160,23 @@ class Stage {
         }
         return names;
     }
+
+    private:
+    [[nodiscard]] size_t getIndex(std::string name) const {
+          auto it = std::find_if(std::cbegin(components_),
+              std::cend(components_),
+              [&name](const auto &e) { return e->getName() == name; });
+          if (it == std::cend(components_))
+              throw std::invalid_argument("Component " + name + " of type " + std::string(T::class_name) + " not found");
+          return std::distance(std::cbegin(components_), it);
+    }
 };
 
 
 template<typename T>
 class Source {
   private:
-    std::vector<T> input_;
+    std::vector<std::shared_ptr<T>> input_;
     std::vector<std::string> names_;
     size_t nInput_{ 0 };
 
@@ -182,11 +187,18 @@ class Source {
 
     void addInput(std::string name) noexcept {
         names_.emplace_back(name);
-        input_.emplace_back(0.);
+        input_.emplace_back(std::make_shared<T>(0.));
         ++nInput_;
     }
 
-    void set(std::vector<T> values) noexcept { input_ = values; }
+    void set(std::vector<T> values) { 
+        if (nInput_ != values.size())
+            throw std::invalid_argument(
+                "Provided " + std::to_string(values.size()) + " input, but " + std::to_string(nInput_) + " were expected.");
+        for (size_t i{ 0 }; i < nInput_; ++i) {
+            *input_.at(i) = values.at(i);
+        }
+    }
 
     void setInputNames(const std::vector<std::string> &names) noexcept {
         names_ = names;
@@ -194,22 +206,32 @@ class Source {
     }
 
     [[nodiscard]] T &get(std::string name) {
-        auto it = std::find(begin(names_), std::end(names_), name);
-        if (it == std::end(names_)) { throw std::invalid_argument("Input " + name + " not found"); }
-        size_t i = distance(begin(names_), it);
-        return input_.at(i);
+        size_t idx{ getIndex(name) };
+        return *input_.at(idx);
     }
 
     [[nodiscard]] const T &get(std::string name) const {
-        auto it = std::find(std::cbegin(names_), std::cend(names_), name);
-        if (it == std::cend(names_)) throw std::invalid_argument("Input " + name + " not found");
-        size_t i = std::distance(std::cbegin(names_), it);
-        return input_.at(i);
+        size_t idx{ getIndex(name) };
+        return *input_.at(idx);
+    }
+
+    [[nodiscard]] auto getPtr(std::string name) const {
+        size_t idx{ getIndex(name) };
+        return input_.at(idx);
     }
 
     [[nodiscard]] auto getNames() const noexcept { return names_; }
 
     [[nodiscard]] size_t getSize() const noexcept { return nInput_; }
+
+    private:
+    [[nodiscard]] size_t getIndex(std::string name) const {
+        auto it = std::find_if(std::cbegin(names_), std::cend(names_),
+            [&name](const auto &e) { return e == name; });
+        if (it == std::cend(names_))
+            throw std::invalid_argument("Input " + name + " of type " + std::string(T::class_name) + " not found");
+        return std::distance(std::cbegin(names_), it);
+    }
 };
 
 template<typename InT, typename OutT>
@@ -260,7 +282,7 @@ class NMSmodel {
     void connect();
 
     template<typename T>
-    void setInput(const std::vector<T> &inputVector) noexcept;
+    void setInput(const std::vector<T> &inputVector);
 
     template<typename T>
     [[nodiscard]] const auto &getComponent(std::string name) const;
@@ -272,7 +294,7 @@ class NMSmodel {
 
   private:
     std::tuple<Stage<Args>...> stages_;
-    std::tuple<Source<Excitation>, Source<MusculotendonLength>, Source<MomentArm>> input_;
+    std::tuple<Source<Excitation>, Source<MusculotendonLength>, Source<MomentArm>> sources_;
 
     //`T` and `U` are of type `Stage`
     template<typename T,
@@ -307,7 +329,7 @@ class NMSmodel {
                         && std::is_same<typename U::concept_t, stage_t>::value,
             int> = 0>
     void connect_() {
-        auto parentComponentNames = std::get<Source<T>>(input_).getNames();
+        auto parentComponentNames = std::get<Source<T>>(sources_).getNames();
         auto childComponentNames = std::get<U>(stages_).getNames();
 
         std::sort(parentComponentNames.begin(), parentComponentNames.end());
@@ -330,13 +352,13 @@ class NMSmodel {
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value
                         && (std::is_same<typename U::concept_t, component_t>::value
-                            || std::is_same<typename U::concept_t, component_mimo_t>::value),
+                        || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connect_(Socket parent, Socket child) {
         cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << endl;
 
-        const auto &input = get<Source<T>>(input_).get(parent.getName());
+        auto input = get<Source<T>>(sources_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, input);
     }
 
@@ -347,12 +369,12 @@ class NMSmodel {
         std::enable_if_t<(std::is_same<typename T::concept_t, component_t>::value
                         || std::is_same<typename T::concept_t, component_mimo_t>::value)
                         && (std::is_same<typename U::concept_t, component_t>::value
-                            || std::is_same<typename U::concept_t, component_mimo_t>::value),
+                        || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connect_(Socket parent, Socket child) {
         cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << endl;
-        auto parentComponent = get<Stage<T>>(stages_).get(parent.getName());
+        auto parentComponent = get<Stage<T>>(stages_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, parentComponent);
     }
 
@@ -366,9 +388,9 @@ class NMSmodel {
 
 template<typename... Args>
 template<typename T>
-void NMSmodel<Args...>::setInput(const std::vector<T> &values) noexcept {
+void NMSmodel<Args...>::setInput(const std::vector<T> &values) {
     // TODO: check size first
-    std::get<Source<T>>(input_).set(values);
+    std::get<Source<T>>(sources_).set(values);
 }
 
 template<typename... Args>
@@ -376,7 +398,7 @@ template<typename T>
 void NMSmodel<Args...>::addInput(const std::string &name) noexcept {
     // TODO: check for other input with same name
     // throw error if same component already exists
-    std::get<Source<T>>(input_).addInput(name);
+    std::get<Source<T>>(sources_).addInput(name);
 }
 
 template<typename... Args>
@@ -396,17 +418,18 @@ void NMSmodel<Args...>::connect(Socket parent, Socket child) {
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect() {
-    if constexpr (is_same<DataType, typename Parent::type>::value) {
+    if constexpr (is_same<typename Parent::concept_t, input_t>::value) {
         connect_<Parent, Stage<Child>>();
     } else {
         connect_<Stage<Parent>, Stage<Child>>();
     }
 }
 
+//Evaluate all the `Stage`s in the order in which they were defined
 template<typename... Args>
 void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
-    std::get<Stage<ceinms::ExponentialActivation>>(stages_).evaluate(dt);
-    std::get<Stage<ceinms::Lloyd2019Muscle>>(stages_).evaluate(dt);
+    std::apply([dt](auto &&... args) { (args.evaluate(dt), ...); }, stages_);
+
 }
 
 template<typename... Args>

@@ -46,8 +46,8 @@ class ExponentialActivation {
         updateCoefficients();
     }
 
-    void setInput(DoubleT excitation);
-    void setInput(Input input);
+    void setInput(Excitation value);
+    void setExcitation(DoubleT value);
 
     void setState(State state);
     // From input and current state calculate the new state of the system
@@ -67,6 +67,11 @@ class ExponentialActivation {
     [[nodiscard]] State getState() const { return s_; }
     [[nodiscard]] Output getOutput() const { return o_; }
 
+    template<typename T, std::enable_if_t<std::is_same<T, Activation>::value, int> = 0>
+    [[nodiscard]] Activation getOutput() const {
+        return o_.activation();
+    }
+
   private:
     /*Calculates internal coefficients based on the current `Parameters`*/
     void updateCoefficients();
@@ -80,13 +85,13 @@ class ExponentialActivation {
 };
 
 
-void ExponentialActivation::setInput(DoubleT excitation) {
-    excitation = std::max(0., excitation);
-    excitation = std::min(1., excitation);
-    i_.excitation = excitation;
+void ExponentialActivation::setExcitation(DoubleT value) {
+    value = std::max(0., value);
+    value = std::min(1., value);
+    i_.excitation = value;
 }
 
-void ExponentialActivation::setInput(Input input) { setInput(input.excitation); }
+void ExponentialActivation::setInput(Excitation value) { setExcitation(value.value); }
 
 void ExponentialActivation::setState(State state) { s_ = state; }
 
@@ -120,7 +125,7 @@ void ExponentialActivation::updateCoefficients() {
 
 
 void connectSocket(const Excitation &parent, ExponentialActivation &child) {
-    child.setInput(parent.value);
+    child.setInput(parent);
 }
 
 

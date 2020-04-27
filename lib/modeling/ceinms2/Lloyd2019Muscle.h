@@ -72,7 +72,9 @@ class Lloyd2019Muscle {
 
     void setActivation(DoubleT activation);
     void setMusculotendonLength(DoubleT musculotendonLength);
-    void setInput(Input input);
+    void setInput(Activation value);
+    void setInput(MusculotendonLength value);
+
     void equilibrate();
     void setState(State state);
     // From input and current state calculate the new state of the system
@@ -88,11 +90,11 @@ class Lloyd2019Muscle {
     // new state and all the output
     void evaluate(DoubleT dt);
 
-    Parameters &updParameters() { return p_; }
-    Parameters getParameters() { return p_; }
-    State &updState() { return s_; }
-    State getState() { return s_; }
-    Output getOutput() { return o_; }
+    [[nodiscard]] Parameters &getParameters() { return p_; }
+    [[nodiscard]] const Parameters& getParameters() const { return p_; }
+    [[nodiscard]] const State &getState() const { return s_; }
+    [[nodiscard]] State &getState() { return s_; }
+    [[nodiscard]] const Output &getOutput() const { return o_; }
 
     /* calculateXYZ functions perform calculations and return the calculated
      * value*/
@@ -134,9 +136,11 @@ void Lloyd2019Muscle::setMusculotendonLength(DoubleT musculotendonLength) {
     i_.musculotendonLength = musculotendonLength;
 }
 
+void Lloyd2019Muscle::setInput(Activation value) { setActivation(value.value); }
 
-void Lloyd2019Muscle::setInput(Input input) { i_ = input; }
+void Lloyd2019Muscle::setInput(MusculotendonLength value) { setMusculotendonLength(value.value); }
 
+void Lloyd2019Muscle::setState(State state) { s_ = state; }
 
 void Lloyd2019Muscle::equilibrate() {
     double diff = 1;
