@@ -377,7 +377,7 @@ class NMSmodel {
 
     template<typename T,
         typename U,
-        std::enable_if_t<std::is_same<DataType, typename U::type>::value, int> = 0>
+        std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value, int> = 0>
     void connect_(Socket parent, Socket child, ...) {
         static_assert(false, "It is not possible to connect to an Input");
     }
