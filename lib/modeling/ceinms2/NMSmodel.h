@@ -299,7 +299,7 @@ class NMSmodel {
                         && std::is_same<typename U::concept_t, stage_t>::value,
 
             int> = 0>
-    void connect_() {
+    void connectStages() {
         auto parentComponentNames = std::get<T>(stages_).getNames();
         auto childComponentNames = std::get<U>(stages_).getNames();
 
@@ -314,7 +314,7 @@ class NMSmodel {
             childComponentNames.end(),
             std::back_inserter(commonNames));
         for (const std::string &name : commonNames) {
-            connect<typename T::type, typename U::type>(name, name);
+            connectComponentToComponent<typename T::type, typename U::type>(name, name);
         }
     }
 
@@ -324,7 +324,7 @@ class NMSmodel {
         std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value
                         && std::is_same<typename U::concept_t, stage_t>::value,
             int> = 0>
-    void connect_() {
+    void connectInputToStages() {
         auto parentComponentNames = std::get<Source<T>>(sources_).getNames();
         auto childComponentNames = std::get<U>(stages_).getNames();
 
@@ -339,7 +339,7 @@ class NMSmodel {
             childComponentNames.end(),
             std::back_inserter(commonNames));
         for (const std::string &name : commonNames) {
-            connect<T, typename U::type>(name, name);
+            connectInputToComponent<T, typename U::type>(name, name);
         }
     }
 
@@ -350,7 +350,7 @@ class NMSmodel {
                         && (std::is_same<typename U::concept_t, component_t>::value
                         || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
-    void connect_(Socket parent, Socket child) {
+    void connectInputToComponent(Socket parent, Socket child) {
         std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << std::endl;
 
@@ -367,7 +367,7 @@ class NMSmodel {
                         && (std::is_same<typename U::concept_t, component_t>::value
                         || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
-    void connect_(Socket parent, Socket child) {
+    void connectComponentToComponent(Socket parent, Socket child) {
         std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << std::endl;
         auto parentComponent = std::get<Stage<T>>(stages_).getPtr(parent.getName());
@@ -408,16 +408,21 @@ void NMSmodel<Args...>::addComponent(const T &component) noexcept {
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect(Socket parent, Socket child) {
-    connect_<Parent, Child>(parent, child);
+    if constexpr (std::is_same<typename Parent::concept_t, input_t>::value) {
+        connectInputToComponent<Parent, Child>(parent, child);
+    } else {
+        connectComponentToComponent<Parent, Child>(parent, child);
+    }
 }
+
 
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect() {
     if constexpr (std::is_same<typename Parent::concept_t, input_t>::value) {
-        connect_<Parent, Stage<Child>>();
+        connectInputToStages<Parent, Stage<Child>>();
     } else {
-        connect_<Stage<Parent>, Stage<Child>>();
+        connectStages<Stage<Parent>, Stage<Child>>();
     }
 }
 
