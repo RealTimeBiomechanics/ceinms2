@@ -165,7 +165,7 @@ class Stage {
               [&name](const auto &e) { return e->getName() == name; });
           if (it == std::cend(components_))
               throw std::invalid_argument("Component " + name + " of type " + std::string(T::class_name) + " not found");
-          return std::distance(std::cbegin(components_), it);
+          return static_cast<size_t>(std::distance(std::cbegin(components_), it));
     }
 };
 
@@ -227,15 +227,15 @@ class Source {
             [&name](const auto &e) { return e == name; });
         if (it == std::cend(names_))
             throw std::invalid_argument("Input " + name + " of type " + std::string(T::class_name) + " not found");
-        return std::distance(std::cbegin(names_), it);
+        return static_cast<size_t>(std::distance(std::cbegin(names_), it));
     }
 };
 
 template<typename InT, typename OutT>
 class MultiInputMultiOutput {
   private:
-    std::function<std::vector<OutT>(const std::vector<InT> &)> fun_;
-    size_t nInput_, nOutput_;
+    std::function<std::vector<OutT>(const std::vector<InT> &)> fun_{([](const std::vector<OutT> &) { return std::vector<InT>{}; })};
+    size_t nInput_{0}, nOutput_{0};
     std::vector<InT> input_;
     std::vector<OutT> output_;
     std::string name_;
@@ -245,8 +245,7 @@ class MultiInputMultiOutput {
     static constexpr std::string_view class_name = "MultiInputMultiOutput";
     MultiInputMultiOutput(size_t nInput, size_t nOutput)
         : nInput_(nInput)
-        , nOutput_(nOutput)
-        , fun_([](const std::vector<OutT> &) { return std::vector<InT>{}; }) {
+        , nOutput_(nOutput) {
         input_.resize(nInput_);
         output_.resize(nOutput_);
     }
@@ -371,7 +370,7 @@ class NMSmodel {
     void connect_(Socket parent, Socket child) {
         std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
              << child << std::endl;
-        auto parentComponent = get<Stage<T>>(stages_).getPtr(parent.getName());
+        auto parentComponent = std::get<Stage<T>>(stages_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, parentComponent);
     }
 
@@ -379,7 +378,7 @@ class NMSmodel {
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value, int> = 0>
     void connect_(Socket parent, Socket child, ...) {
-        static_assert(false, "It is not possible to connect to an Input");
+     //   static_assert(false, "It is not possible to connect to an Input");
     }
 };
 
@@ -415,7 +414,7 @@ void NMSmodel<Args...>::connect(Socket parent, Socket child) {
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect() {
-    if constexpr (is_same<typename Parent::concept_t, input_t>::value) {
+    if constexpr (std::is_same<typename Parent::concept_t, input_t>::value) {
         connect_<Parent, Stage<Child>>();
     } else {
         connect_<Stage<Parent>, Stage<Child>>();

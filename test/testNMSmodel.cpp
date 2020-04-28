@@ -268,8 +268,8 @@ int testConnectionFlow() {
         model.addInput<MusculotendonLength>("muscle1b");
 
         model.connect<Excitation, ExcitationBypass>();
-        model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1a");
-        model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1b");
+        model.connect<ExcitationBypass, ActivationBypass>("muscle1"s, "muscle1a"s);
+        model.connect<ExcitationBypass, ActivationBypass>("muscle1"s, "muscle1b"s);
         model.connect<MusculotendonLength, MTLBypass>();
         model.setInput(vector{ Excitation{ 1 } });
         model.setInput(vector{ MusculotendonLength{ 1.1 }, MusculotendonLength{ 3.1 } });
@@ -394,17 +394,17 @@ int testConnections() {
         }
         cout << "# Connect Excitation input to MultiInputMultiOutput component" << endl;
         model.connect<Excitation, MultiInputMultiOutput<Excitation, Excitation>>(
-            "mtu0", { "mimo", 0 });
+            "mtu0"s, { "mimo"s, 0 });
         model.connect<Excitation, MultiInputMultiOutput<Excitation, Excitation>>(
-            "mtu1", { "mimo", 1 });
+            "mtu1"s, { "mimo"s, 1 });
 
         cout << "# Connect MultiInputMultiOutput component to ExponentialActivation" << endl;
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
-            { "mimo", 0 }, "mtu0");
+            { "mimo"s, 0 }, "mtu0"s);
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
-            { "mimo", 1 }, "mtu1");
+            { "mimo"s, 1 }, "mtu1"s);
         model.connect<MultiInputMultiOutput<Excitation, Excitation>, ceinms::ExponentialActivation>(
-            { "mimo", 2 }, "mtu2");
+            { "mimo"s, 2 }, "mtu2"s);
 
     } catch (const std::exception &e) {
         std::cout << e.what();
