@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
+#include <string>
 #include <string_view>
 #include "ceinms2/Types.h"
 namespace ceinms {

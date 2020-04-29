@@ -27,6 +27,38 @@ class MultiInputMultiOutput;
 template<typename...>
 class NMSmodel;
 
+template<typename MultiInMultiOutT,
+    typename Component,
+    std::enable_if_t<std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value
+                         && std::is_same<typename Component::concept_t, component_t>::value,
+        int> = 0>
+void connectSocket(const MultiInMultiOutT &parent, Component &child, size_t parentSlot) {
+    child.setInput(parent.getOutput(parentSlot));
+}
+
+template<typename InputT,
+    typename MultiInMultiOutT,
+    std::enable_if_t<
+        std::is_same<typename InputT::concept_t, data_t>::value
+            && std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value,
+        int> = 0>
+void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSlot) {
+    child.setInput(childSlot, parent);
+}
+
+template<typename T,
+    typename U,
+    std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
+                         && std::is_same<typename U::concept_t, data_t>::value,
+        int> = 0>
+void connectSocket(const T &parent, U &child) {
+    connectSocket(parent, child.get());
+}
+
+template<typename T, typename U>
+void connectSocket(const T &, U &, ...) {
+    std::cout << "No socket connection" << std::endl;
+}
 
 
 class Socket {
@@ -247,40 +279,6 @@ class MultiInputMultiOutput {
     [[nodiscard]] std::string getName() const { return name_; }
     void evaluate(DoubleT) { output_ = fun_(input_); }
 };
-
-
-template<typename MultiInMultiOutT,
-    typename Component,
-    std::enable_if_t<std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value
-                         && std::is_same<typename Component::concept_t, component_t>::value,
-        int> = 0>
-void connectSocket(const MultiInMultiOutT &parent, Component &child, size_t parentSlot) {
-    child.setInput(parent.getOutput(parentSlot));
-}
-
-template<typename InputT,
-    typename MultiInMultiOutT,
-    std::enable_if_t<
-        std::is_same<typename InputT::concept_t, data_t>::value
-            && std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value,
-        int> = 0>
-void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSlot) {
-    child.setInput(childSlot, parent);
-}
-
-template<typename T,
-    typename U,
-    std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
-                         && std::is_same<typename U::concept_t, data_t>::value,
-        int> = 0>
-void connectSocket(const T &parent, U &child) {
-    connectSocket(parent, child.get());
-}
-
-template<typename T, typename U>
-void connectSocket(const T &, U &, ...) {
-    std::cout << "No socket connection" << std::endl;
-}
 
 template<typename... Args>
 class NMSmodel {
