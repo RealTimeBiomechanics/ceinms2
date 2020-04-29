@@ -88,7 +88,7 @@ void ExponentialActivation::setExcitation(DoubleT value) {
     i_.excitation = value;
 }
 
-void ExponentialActivation::setInput(Excitation value) { setExcitation(value.value); }
+void ExponentialActivation::setInput(Excitation value) { setExcitation(value.get()); }
 
 void ExponentialActivation::setState(State state) { s_ = state; }
 

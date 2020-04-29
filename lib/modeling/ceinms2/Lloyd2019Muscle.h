@@ -138,9 +138,9 @@ void Lloyd2019Muscle::setMusculotendonLength(DoubleT musculotendonLength) {
     i_.musculotendonLength = musculotendonLength;
 }
 
-void Lloyd2019Muscle::setInput(Activation value) { setActivation(value.value); }
+void Lloyd2019Muscle::setInput(Activation value) { setActivation(value.get()); }
 
-void Lloyd2019Muscle::setInput(MusculotendonLength value) { setMusculotendonLength(value.value); }
+void Lloyd2019Muscle::setInput(MusculotendonLength value) { setMusculotendonLength(value.get()); }
 
 void Lloyd2019Muscle::setState(State state) { s_ = state; }
 

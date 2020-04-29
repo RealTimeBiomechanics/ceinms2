@@ -27,28 +27,7 @@ class MultiInputMultiOutput;
 template<typename...>
 class NMSmodel;
 
-template<typename MultiInMultiOutT,
-    typename Component,
-    std::enable_if_t<std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value
-                    && std::is_same<typename Component::concept_t, component_t>::value,
-        int> = 0>
-void connectSocket(const MultiInMultiOutT &parent, Component &child, size_t parentSlot) {
-    connectSocket(parent.getOutput().at(parentSlot), child);
-}
 
-template<typename InputT,
-    typename MultiInMultiOutT,
-    std::enable_if_t<std::is_same<DataType, typename InputT::type>::value
-                    && std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value,
-        int> = 0>
-void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSlot) {
-    connectSocket(parent, child.getInput().at(childSlot));
-}
-
-template<typename T, typename U>
-void connectSocket(const T &, U &, ...) {
-    std::cout << "No socket connection" << std::endl;
-}
 
 class Socket {
   public:
@@ -236,6 +215,8 @@ class MultiInputMultiOutput {
   private:
     std::function<std::vector<OutT>(const std::vector<InT> &)> fun_{([](const std::vector<OutT> &) { return std::vector<InT>{}; })};
     size_t nInput_{0}, nOutput_{0};
+    //consider having these input_ and output_ as shared_ptr, same as 
+    // per `Source`
     std::vector<InT> input_;
     std::vector<OutT> output_;
     std::string name_;
@@ -250,14 +231,56 @@ class MultiInputMultiOutput {
         output_.resize(nOutput_);
     }
     void setFunction(std::function<std::vector<OutT>(const std::vector<InT> &)> fun) { fun_ = fun; }
-    void setInput(const std::vector<InT> &input);
+    void setInput(size_t index, const InT& value) { input_.at(index) = value; }
+
+    void setInput(const std::vector<InT>& input) {
+        if (nInput_ != input.size())
+            throw std::invalid_argument("Provided " + std::to_string(input.size()) + " input, but "
+                                        + std::to_string(nInput_) + " were expected.");
+        input_ = input;
+    }
+
     [[nodiscard]] const std::vector<OutT> &getOutput() const { return output_; }
-    std::vector<OutT> &getInput() { return input_; }
+    [[nodiscard]] OutT getOutput(size_t index) const { return output_.at(index); }
 
     void setName(std::string name) { name_ = name; }
     [[nodiscard]] std::string getName() const { return name_; }
     void evaluate(DoubleT) { output_ = fun_(input_); }
 };
+
+
+template<typename MultiInMultiOutT,
+    typename Component,
+    std::enable_if_t<std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value
+                         && std::is_same<typename Component::concept_t, component_t>::value,
+        int> = 0>
+void connectSocket(const MultiInMultiOutT &parent, Component &child, size_t parentSlot) {
+    child.setInput(parent.getOutput(parentSlot));
+}
+
+template<typename InputT,
+    typename MultiInMultiOutT,
+    std::enable_if_t<
+        std::is_same<typename InputT::concept_t, data_t>::value
+            && std::is_same<typename MultiInMultiOutT::concept_t, component_mimo_t>::value,
+        int> = 0>
+void connectSocket(const InputT &parent, MultiInMultiOutT &child, size_t childSlot) {
+    child.setInput(childSlot, parent);
+}
+
+template<typename T,
+    typename U,
+    std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
+                         && std::is_same<typename U::concept_t, data_t>::value,
+        int> = 0>
+void connectSocket(const T &parent, U &child) {
+    connectSocket(parent, child.get());
+}
+
+template<typename T, typename U>
+void connectSocket(const T &, U &, ...) {
+    std::cout << "No socket connection" << std::endl;
+}
 
 template<typename... Args>
 class NMSmodel {
@@ -321,7 +344,7 @@ class NMSmodel {
     //`T` is an Input and and `U` is a `Stage`
     template<typename T,
         typename U,
-        std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value
+        std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
                         && std::is_same<typename U::concept_t, stage_t>::value,
             int> = 0>
     void connectInputToStages() {
@@ -343,10 +366,10 @@ class NMSmodel {
         }
     }
 
-    //`T` is an `input_t` and `U` is a `component_t` or a `component_mimo_t`
+    //`T` is an `data_t` and `U` is a `component_t` or a `component_mimo_t`
     template<typename T,
         typename U,
-        std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value
+        std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
                         && (std::is_same<typename U::concept_t, component_t>::value
                         || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
@@ -376,7 +399,7 @@ class NMSmodel {
 
     template<typename T,
         typename U,
-        std::enable_if_t<std::is_same<typename T::concept_t, input_t>::value, int> = 0>
+        std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value, int> = 0>
     void connect_(Socket parent, Socket child, ...) {
      //   static_assert(false, "It is not possible to connect to an Input");
     }
@@ -408,7 +431,7 @@ void NMSmodel<Args...>::addComponent(const T &component) noexcept {
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect(Socket parent, Socket child) {
-    if constexpr (std::is_same<typename Parent::concept_t, input_t>::value) {
+    if constexpr (std::is_same<typename Parent::concept_t, data_t>::value) {
         connectInputToComponent<Parent, Child>(parent, child);
     } else {
         connectComponentToComponent<Parent, Child>(parent, child);
@@ -419,7 +442,7 @@ void NMSmodel<Args...>::connect(Socket parent, Socket child) {
 template<typename... Args>
 template<typename Parent, typename Child>
 void NMSmodel<Args...>::connect() {
-    if constexpr (std::is_same<typename Parent::concept_t, input_t>::value) {
+    if constexpr (std::is_same<typename Parent::concept_t, data_t>::value) {
         connectInputToStages<Parent, Stage<Child>>();
     } else {
         connectStages<Stage<Parent>, Stage<Child>>();

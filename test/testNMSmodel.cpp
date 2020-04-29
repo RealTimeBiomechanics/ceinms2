@@ -115,9 +115,9 @@ class BypassComponent {
     BypassComponent() = default;
     [[nodiscard]] std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
-    void setInput(Excitation input) { excitation_ = input.value; }
-    void setInput(MusculotendonLength input) { musculotendonLength_ = input.value; }
-    void setInput(Activation input) { activation_ = input.value; }
+    void setInput(Excitation input) { excitation_ = input.get(); }
+    void setInput(MusculotendonLength input) { musculotendonLength_ = input.get(); }
+    void setInput(Activation input) { activation_ = input.get(); }
     void evaluate(DoubleT) {
         if constexpr (value == 0) {
             o_.output = excitation_ + 1;
@@ -284,6 +284,50 @@ int testConnectionFlow() {
         std::cout << e.what();
         return 1;
     }
+    try {
+        cout << "------------TEST 3------------\n";
+        cout << "Connecting a single input to a mimo component and testing the correctness of "
+                "the output\n";
+        using MIMO = MultiInputMultiOutput<Excitation, Excitation>;
+        using MyNMSmodel = NMSmodel<MIMO>;
+        MyNMSmodel model;
+        MIMO mimo(3, 4);
+        auto distributeFunc([](const vector<Excitation> &in) {
+            vector<Excitation> out;
+            out.emplace_back(Excitation(in[0].get() + 10));
+            out.emplace_back(Excitation(in[0].get() + 20));
+            out.emplace_back(Excitation(in[1].get() + 30));
+            out.emplace_back(Excitation(in[2].get() + 40));
+            return out;
+        });
+        mimo.setFunction(distributeFunc);
+        mimo.setName("mimo");
+        model.addInput<Excitation>("muscle1");
+        model.addInput<Excitation>("muscle2");
+        model.addComponent(mimo);
+
+        model.connect<Excitation, MIMO>("muscle1"s, { "mimo"s, 0 });
+        model.connect<Excitation, MIMO>("muscle1"s, { "mimo"s, 1 });
+        model.connect<Excitation, MIMO>("muscle2"s, { "mimo"s, 2 });
+
+
+        model.setInput(vector{ Excitation{ 1 }, Excitation{ 2 } });
+        model.evaluate(0.1);
+        auto out1 = model.getComponent<MIMO>("mimo").getOutput();
+        std::cout << out1.at(0).get() << " should be 11\n";
+        std::cout << out1.at(1).get() << " should be 21\n";
+        std::cout << out1.at(2).get() << " should be 31\n";
+        std::cout << out1.at(3).get() << " should be 42\n";
+        if (out1.at(0).get() != 11 
+            && out1.at(1).get() != 21 
+            && out1.at(2).get() != 31
+            && out1.at(3).get() != 42)
+            throw std::logic_error("Wrong connection flow\n");
+
+    } catch (const std::exception &e) {
+        std::cout << e.what();
+        return 1;
+    }
     return 0;
 }
 
@@ -415,9 +459,9 @@ int testConnections() {
 }
 
 int testConcepts() {
-    static_assert(is_same<typename Excitation::concept_t, input_t>::value);
-    static_assert(is_same<typename MusculotendonLength::concept_t, input_t>::value);
-    static_assert(is_same<typename MomentArm::concept_t, input_t>::value);
+    static_assert(is_same<typename Excitation::concept_t, data_t>::value);
+    static_assert(is_same<typename MusculotendonLength::concept_t, data_t>::value);
+    static_assert(is_same<typename MomentArm::concept_t, data_t>::value);
     static_assert(is_same<typename ceinms::ExponentialActivation::concept_t, component_t>::value);
     static_assert(is_same<typename ceinms::Lloyd2019Muscle::concept_t, component_t>::value);
     static_assert(is_same<typename Stage<ceinms::Lloyd2019Muscle>::concept_t, stage_t>::value);
