@@ -1,4 +1,7 @@
 add_executable(testNMSmodel testNMSmodel.cpp)
 target_link_libraries(testNMSmodel modeling project_options project_warnings )
-
 add_test(TestNMSmodel testNMSmodel)
+
+add_executable(testLloyd2003Muscle testLloyd2003Muscle.cpp)
+target_link_libraries(testLloyd2003Muscle modeling project_options project_warnings )
+add_test(TestLloyd2003Muscle testLloyd2003Muscle)

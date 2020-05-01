@@ -45,10 +45,9 @@ if(ENABLE_TESTING)
   message(
     "Building Tests."
   )
+  add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
   add_subdirectory(test)
 endif()
-
-add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
 
 add_subdirectory(lib)
 add_subdirectory(src)
