@@ -1,5 +1,5 @@
-#ifndef ceinms2_Lloyd2019Muscle_h
-#define ceinms2_Lloyd2019Muscle_h
+#ifndef ceinms2_Lloyd2003Muscle_h
+#define ceinms2_Lloyd2003Muscle_h
 #include <cmath>
 #include <string_view>
 #include "ceinms2/Types.h"
@@ -11,11 +11,11 @@ namespace ceinms {
 
 using CurveOffline = ceinms::Curve<ceinms::CurveMode::Offline,
     ceinms::CurveMode::Interpolation::Cubic>;
-class Lloyd2019Muscle {
+class Lloyd2003Muscle {
   public:
     using type = nullptr_t;
     using concept_t = component_t;
-    static constexpr std::string_view class_name = "Lloyd2019Muscle";
+    static constexpr std::string_view class_name = "Lloyd2003Muscle";
     struct Parameters {
         Parameters() = default;
         DoubleT optimalFiberLength{ 1. };
@@ -63,7 +63,7 @@ class Lloyd2019Muscle {
         DoubleT fp{ 0. };
     };
 
-    Lloyd2019Muscle(Parameters parameters)
+    Lloyd2003Muscle(Parameters parameters)
         : p_(parameters) {
         s_.fiberLength = p_.optimalFiberLength;
         s_.fiberVelocity = 0.;
@@ -132,19 +132,19 @@ class Lloyd2019Muscle {
     Output o_;
 };
 
-void Lloyd2019Muscle::setActivation(DoubleT activation) { i_.activation = activation; }
+void Lloyd2003Muscle::setActivation(DoubleT activation) { i_.activation = activation; }
 
-void Lloyd2019Muscle::setMusculotendonLength(DoubleT musculotendonLength) {
+void Lloyd2003Muscle::setMusculotendonLength(DoubleT musculotendonLength) {
     i_.musculotendonLength = musculotendonLength;
 }
 
-void Lloyd2019Muscle::setInput(Activation value) { setActivation(value.get()); }
+void Lloyd2003Muscle::setInput(Activation value) { setActivation(value.get()); }
 
-void Lloyd2019Muscle::setInput(MusculotendonLength value) { setMusculotendonLength(value.get()); }
+void Lloyd2003Muscle::setInput(MusculotendonLength value) { setMusculotendonLength(value.get()); }
 
-void Lloyd2019Muscle::setState(State state) { s_ = state; }
+void Lloyd2003Muscle::setState(State state) { s_ = state; }
 
-void Lloyd2019Muscle::equilibrate() {
+void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
     double fLength = s_.fiberLength;
     double tol = 1e-9;
@@ -156,15 +156,15 @@ void Lloyd2019Muscle::equilibrate() {
     validateState();
 }
 
-void Lloyd2019Muscle::integrate(DoubleT dt) {
+void Lloyd2003Muscle::integrate(DoubleT dt) {
     sNew_.fiberLength = integrateFiberLength(dt);
     sNew_.fiberVelocity =
         calculateFiberVelocityFromFiberLength(s_.fiberLength, sNew_.fiberLength, dt);
 }
 
-void Lloyd2019Muscle::validateState() { s_ = sNew_; }
+void Lloyd2003Muscle::validateState() { s_ = sNew_; }
 
-void Lloyd2019Muscle::calculateOutput() {
+void Lloyd2003Muscle::calculateOutput() {
     o_.normalisedFiberLengthAtT =
         calculateNormalisedFiberLengthAtT(i_.activation, s_.fiberLength, p_);
     o_.normalisedFiberLength = calculateNormalisedFiberLength(s_.fiberLength, p_);
@@ -183,28 +183,28 @@ void Lloyd2019Muscle::calculateOutput() {
     o_.tendonForce = calculateTendonForce(i_.musculotendonLength, s_.fiberLength, p_);
 }
 
-void Lloyd2019Muscle::evaluate(DoubleT dt) {
+void Lloyd2003Muscle::evaluate(DoubleT dt) {
     integrate(dt);
     validateState();
     calculateOutput();
 }
 
-DoubleT Lloyd2019Muscle::calculateFiberVelocityFromFiberLength(DoubleT previousFiberLength,
+DoubleT Lloyd2003Muscle::calculateFiberVelocityFromFiberLength(DoubleT previousFiberLength,
     DoubleT currentFiberLength,
     DoubleT dt) {
     return (currentFiberLength - previousFiberLength) / dt;
 }
 
-DoubleT Lloyd2019Muscle::integrateFiberLength(DoubleT dt) {
+DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
     DoubleT minFiberLength = 0.2 * p_.optimalFiberLength;
     DoubleT maxFiberLength = 2 * p_.optimalFiberLength;
 
     auto f = [&](double fiberLength) -> double {
-        DoubleT fiberVelocity = Lloyd2019Muscle::calculateFiberVelocityFromFiberLength(
+        DoubleT fiberVelocity = Lloyd2003Muscle::calculateFiberVelocityFromFiberLength(
             this->s_.fiberLength, fiberLength, dt);
-        DoubleT tendonForce = Lloyd2019Muscle::calculateTendonForce(
+        DoubleT tendonForce = Lloyd2003Muscle::calculateTendonForce(
             this->i_.musculotendonLength, fiberLength, this->p_);
-        DoubleT fiberForce = Lloyd2019Muscle::calculateFiberForce(
+        DoubleT fiberForce = Lloyd2003Muscle::calculateFiberForce(
             this->i_.activation, fiberLength, fiberVelocity, this->p_);
         DoubleT v = tendonForce - fiberForce;
         return v;
@@ -214,24 +214,24 @@ DoubleT Lloyd2019Muscle::integrateFiberLength(DoubleT dt) {
     return currentFiberLength;
 }
 
-DoubleT Lloyd2019Muscle::calculateOptimalFiberLengthAtT(DoubleT activation,
-    const Lloyd2019Muscle::Parameters &p) {
+DoubleT Lloyd2003Muscle::calculateOptimalFiberLengthAtT(DoubleT activation,
+    const Lloyd2003Muscle::Parameters &p) {
     return p.optimalFiberLength * (p.percentageChange * (1.0 - activation) + 1);
 }
 
-DoubleT Lloyd2019Muscle::calculateNormalisedFiberLengthAtT(DoubleT activation,
+DoubleT Lloyd2003Muscle::calculateNormalisedFiberLengthAtT(DoubleT activation,
     DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+    const Lloyd2003Muscle::Parameters &p) {
     return fiberLength / calculateOptimalFiberLengthAtT(activation, p);
 }
 
-DoubleT Lloyd2019Muscle::calculateNormalisedFiberLength(DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+DoubleT Lloyd2003Muscle::calculateNormalisedFiberLength(DoubleT fiberLength,
+    const Lloyd2003Muscle::Parameters &p) {
     return fiberLength / p.optimalFiberLength;
 }
 
-DoubleT Lloyd2019Muscle::calculateNormalisedFiberVelocity(DoubleT fiberVelocity,
-    const Lloyd2019Muscle::Parameters &p) {
+DoubleT Lloyd2003Muscle::calculateNormalisedFiberVelocity(DoubleT fiberVelocity,
+    const Lloyd2003Muscle::Parameters &p) {
     DoubleT normalisedFiberVelocity =
         fiberVelocity / (p.optimalFiberLength * p.maxContractionVelocity);
     if (normalisedFiberVelocity > 1) { normalisedFiberVelocity = 1; }
@@ -239,23 +239,23 @@ DoubleT Lloyd2019Muscle::calculateNormalisedFiberVelocity(DoubleT fiberVelocity,
     return normalisedFiberVelocity;
 }
 
-DoubleT Lloyd2019Muscle::calculatePennationAngle(DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+DoubleT Lloyd2003Muscle::calculatePennationAngle(DoubleT fiberLength,
+    const Lloyd2003Muscle::Parameters &p) {
     DoubleT value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
     if (value < 0) { value = 0; }
     if (value > 0.99) { value = 0.99; }
     return asin(value);
 }
 
-DoubleT Lloyd2019Muscle::calculateTendonLength(DoubleT musculotendonLength,
+DoubleT Lloyd2003Muscle::calculateTendonLength(DoubleT musculotendonLength,
     DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+    const Lloyd2003Muscle::Parameters &p) {
     return musculotendonLength - fiberLength * cos(calculatePennationAngle(fiberLength, p));
 }
 
-DoubleT Lloyd2019Muscle::calculateTendonStrain(DoubleT musculotendonLength,
+DoubleT Lloyd2003Muscle::calculateTendonStrain(DoubleT musculotendonLength,
     DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+    const Lloyd2003Muscle::Parameters &p) {
     DoubleT tendonStrain =
         (calculateTendonLength(musculotendonLength, fiberLength, p) - p.tendonSlackLength)
         / p.tendonSlackLength;
@@ -263,10 +263,10 @@ DoubleT Lloyd2019Muscle::calculateTendonStrain(DoubleT musculotendonLength,
     return tendonStrain;
 }
 
-DoubleT Lloyd2019Muscle::calculateFiberForce(DoubleT activation,
+DoubleT Lloyd2003Muscle::calculateFiberForce(DoubleT activation,
     DoubleT fiberLength,
     DoubleT fiberVelocity,
-    const Lloyd2019Muscle::Parameters &p) {
+    const Lloyd2003Muscle::Parameters &p) {
     DoubleT normalisedFiberLengthAtT{ calculateNormalisedFiberLengthAtT(
         activation, fiberLength, p) };
     DoubleT normalisedFiberLength{ calculateNormalisedFiberLength(fiberLength, p) };
@@ -285,9 +285,9 @@ DoubleT Lloyd2019Muscle::calculateFiberForce(DoubleT activation,
 }
 
 
-DoubleT Lloyd2019Muscle::calculateTendonForce(DoubleT musculotendonLength,
+DoubleT Lloyd2003Muscle::calculateTendonForce(DoubleT musculotendonLength,
     DoubleT fiberLength,
-    const Lloyd2019Muscle::Parameters &p) {
+    const Lloyd2003Muscle::Parameters &p) {
     DoubleT tendonStrain{ calculateTendonStrain(musculotendonLength, fiberLength, p) };
     DoubleT tendonForce{ p.strengthCoefficient * p.maxIsometricForce
                          * p.tendonForceStrainCurve.getValue(tendonStrain) };
@@ -296,15 +296,15 @@ DoubleT Lloyd2019Muscle::calculateTendonForce(DoubleT musculotendonLength,
 
 
 //This can be made generic when Concepts are available
-void connectSocket(const ExponentialActivation &parent, Lloyd2019Muscle &child) {
+void connectSocket(const ExponentialActivation &parent, Lloyd2003Muscle &child) {
     child.setInput(parent.getOutput<Activation>());
 }
 
-void connectSocket(const Activation &parent, Lloyd2019Muscle &child) {
+void connectSocket(const Activation &parent, Lloyd2003Muscle &child) {
     child.setInput(parent);
 }
 
-void connectSocket(const MusculotendonLength &parent, Lloyd2019Muscle &child) {
+void connectSocket(const MusculotendonLength &parent, Lloyd2003Muscle &child) {
     child.setInput(parent);
 }
 

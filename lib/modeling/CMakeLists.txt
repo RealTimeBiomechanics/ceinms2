@@ -1,4 +1,4 @@
-set(modeling_HEADERS ceinms2/Lloyd2019Muscle.h
+set(modeling_HEADERS ceinms2/Lloyd2003Muscle.h
                      ceinms2/ExponentialActivation.h
 					 ceinms2/WDBsolver.h
 					 ceinms2/NMSmodel.h

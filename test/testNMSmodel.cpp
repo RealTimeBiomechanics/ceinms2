@@ -1,4 +1,4 @@
-#include <ceinms2/Lloyd2019Muscle.h>
+#include <ceinms2/Lloyd2003Muscle.h>
 #include <ceinms2/ExponentialActivation.h>
 #include <ceinms2/NMSmodel.h>
 #include <iostream>
@@ -69,7 +69,7 @@ auto getDefaultMuscle() {
     const CurveOffline vel(vel_x, vel_y);
     const CurveOffline ten(ten_x, ten_y);
 
-    ceinms::Lloyd2019Muscle::Parameters p;
+    ceinms::Lloyd2003Muscle::Parameters p;
     p.damping = 0.1;
     p.maxContractionVelocity = 1;
     p.maxIsometricForce = 1;
@@ -82,7 +82,7 @@ auto getDefaultMuscle() {
     p.passiveForceLengthCurve = pas;
     p.forceVelocityCurve = vel;
     p.tendonForceStrainCurve = ten;
-    ceinms::Lloyd2019Muscle muscle(p);
+    ceinms::Lloyd2003Muscle muscle(p);
     muscle.setName("muscle");
     return muscle;
 }
@@ -333,7 +333,7 @@ int testConnectionFlow() {
 
 int testConnections() {
     using MyNMSmodel = NMSmodel<ExponentialActivation,
-        Lloyd2019Muscle,
+        Lloyd2003Muscle,
         MultiInputMultiOutput<Excitation, Excitation>>;
     try {
         /*Test if automatic connection between input and component and between component and
@@ -341,7 +341,7 @@ int testConnections() {
          */
         cout << "------------TEST 1------------\n";
         MyNMSmodel model;
-        ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
+        ceinms::Lloyd2003Muscle muscle(getDefaultMuscle());
         muscle.setName("mtu1");
         ceinms::ExponentialActivation act(getDefaultActivation());
         act.setName("mtu1");
@@ -351,8 +351,8 @@ int testConnections() {
         model.addInput<Excitation>("mtu1");
 
         model.connect<Excitation, ceinms::ExponentialActivation>();
-        model.connect<MusculotendonLength, ceinms::Lloyd2019Muscle>();
-        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2019Muscle>();
+        model.connect<MusculotendonLength, ceinms::Lloyd2003Muscle>();
+        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2003Muscle>();
     } catch (const std::exception &e) {
         std::cout << e.what();
         return 1;
@@ -364,7 +364,7 @@ int testConnections() {
          */
         cout << "------------TEST 2------------\n";
         MyNMSmodel model;
-        ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
+        ceinms::Lloyd2003Muscle muscle(getDefaultMuscle());
         ceinms::ExponentialActivation act(getDefaultActivation());
         for (int i(0); i < 10; ++i) {
             string name = "mtu" + to_string(i);
@@ -377,10 +377,10 @@ int testConnections() {
         }
         cout << "# Connect Excitation input to ExponentialActivation component" << endl;
         model.connect<Excitation, ceinms::ExponentialActivation>();
-        cout << "# Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
-        model.connect<MusculotendonLength, ceinms::Lloyd2019Muscle>();
-        cout << "# Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
-        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2019Muscle>();
+        cout << "# Connect MusculotendonLength input to Lloyd2003Muscle component" << endl;
+        model.connect<MusculotendonLength, ceinms::Lloyd2003Muscle>();
+        cout << "# Connect ExponentialActivation component to Lloyd2003Muscle component" << endl;
+        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2003Muscle>();
     } catch (const std::exception &e) {
         std::cout << e.what();
         return 1;
@@ -392,7 +392,7 @@ int testConnections() {
          */
         cout << "------------TEST 3------------\n";
         MyNMSmodel model;
-        ceinms::Lloyd2019Muscle muscle(getDefaultMuscle());
+        ceinms::Lloyd2003Muscle muscle(getDefaultMuscle());
         ceinms::ExponentialActivation act(getDefaultActivation());
         for (int i(0); i < 10; ++i) {
             string name = "mtu" + to_string(i);
@@ -409,10 +409,10 @@ int testConnections() {
         }
         cout << "# Connect Excitation input to ExponentialActivation component" << endl;
         model.connect<Excitation, ceinms::ExponentialActivation>();
-        cout << "# Connect MusculotendonLength input to Lloyd2019Muscle component" << endl;
-        model.connect<MusculotendonLength, ceinms::Lloyd2019Muscle>();
-        cout << "# Connect ExponentialActivation component to Lloyd2019Muscle component" << endl;
-        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2019Muscle>();
+        cout << "# Connect MusculotendonLength input to Lloyd2003Muscle component" << endl;
+        model.connect<MusculotendonLength, ceinms::Lloyd2003Muscle>();
+        cout << "# Connect ExponentialActivation component to Lloyd2003Muscle component" << endl;
+        model.connect<ceinms::ExponentialActivation, ceinms::Lloyd2003Muscle>();
     } catch (const std::exception &e) {
         std::cout << e.what();
         return 1;
@@ -463,8 +463,8 @@ int testConcepts() {
     static_assert(is_same<typename MusculotendonLength::concept_t, data_t>::value);
     static_assert(is_same<typename MomentArm::concept_t, data_t>::value);
     static_assert(is_same<typename ceinms::ExponentialActivation::concept_t, component_t>::value);
-    static_assert(is_same<typename ceinms::Lloyd2019Muscle::concept_t, component_t>::value);
-    static_assert(is_same<typename Stage<ceinms::Lloyd2019Muscle>::concept_t, stage_t>::value);
+    static_assert(is_same<typename ceinms::Lloyd2003Muscle::concept_t, component_t>::value);
+    static_assert(is_same<typename Stage<ceinms::Lloyd2003Muscle>::concept_t, stage_t>::value);
     static_assert(
         is_same<typename Stage<ceinms::ExponentialActivation>::concept_t, stage_t>::value);
     static_assert(is_same<typename Source<Excitation>::concept_t, source_t>::value);

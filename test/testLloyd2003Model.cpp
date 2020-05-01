@@ -1,5 +1,5 @@
 #include "ceinms2/ExponentialActivation.h"
-#include "ceinms2/Lloyd2003Muscle.h"
+#include "ceinms2/Lloyd2019Muscle.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/DataTable.h"
 #include <cmath>
@@ -76,7 +76,7 @@ static ceinms::DataTable<T> fillFromCSV(const string filename,
 }
 
 /*
-void printStates(ceinms::Lloyd2003Muscle& muscle) {
+void printStates(ceinms::Lloyd2019Muscle& muscle) {
 
         ofstream outF("out.csv");
         outF << "calcFiberForce, activation, activeForce, dampingForce,
@@ -111,7 +111,7 @@ fv, fp" << endl; DoubleT flStart = 0.1, flStop = 1.9; const unsigned N = 100;
 */
 
 
-void printSolutionSpace(ceinms::Lloyd2003Muscle &muscle) {
+void printSolutionSpace(ceinms::Lloyd2019Muscle &muscle) {
     std::ofstream outF("outSolutionSpace.csv");
     DoubleT flStart = 0.5, flStop = 1.5, fvStart = -1, fvStop = 1;
     const unsigned N = 100;
@@ -133,7 +133,7 @@ void printSolutionSpace(ceinms::Lloyd2003Muscle &muscle) {
         }
 }
 
-void printStep(ceinms::Lloyd2003Muscle &muscle) {
+void printStep(ceinms::Lloyd2019Muscle &muscle) {
     std::ofstream outF("outStepResponse.csv");
     DoubleT mtuLStart = 2.1, mtuLStop = 2.3, activation = 0.5;
     muscle.setActivation(activation);
@@ -157,7 +157,7 @@ void printStep(ceinms::Lloyd2003Muscle &muscle) {
 }
 
 /*
-void testAutoDiff(ceinms::Lloyd2003Muscle& muscle) {
+void testAutoDiff(ceinms::Lloyd2019Muscle& muscle) {
         dual a = 1.;
         dual fl = 1.;
         dual fv = 0;
@@ -252,7 +252,7 @@ int main_() {
     ceinms::CurveOffline ten(ten_x, ten_y);
 
 
-    ceinms::Lloyd2003Muscle::Parameters p;
+    ceinms::Lloyd2019Muscle::Parameters p;
     p.damping = 0.1;
     p.maxContractionVelocity = 1;
     p.maxIsometricForce = 1;
@@ -266,7 +266,7 @@ int main_() {
     p.forceVelocityCurve = vel;
     p.tendonForceStrainCurve = ten;
 
-    ceinms::Lloyd2003Muscle muscle(p);
+    ceinms::Lloyd2019Muscle muscle(p);
 
     muscle.setActivation(0.2);
     muscle.setMusculotendonLength(1.3);
@@ -277,7 +277,7 @@ int main_() {
         double interval = 0.1;
         muscle.setActivation(0.2);
         muscle.setMusculotendonLength(0.5+static_cast<double>(i)*interval);
-//        muscle.setState(s);
+        muscle.setState(s);
         muscle.evaluate(0.01);
     }
 
@@ -400,7 +400,7 @@ void runTrial(ceinms::DataTable<double> &trial) {
     ceinms::CurveOffline vel(vel_x, vel_y);
     ceinms::CurveOffline ten(ten_x, ten_y);
 
-    ceinms::Lloyd2003Muscle::Parameters p;
+    ceinms::Lloyd2019Muscle::Parameters p;
     p.damping = 0.1;
     p.maxContractionVelocity = 5.3156293513;
     p.maxIsometricForce = 1.2758948506;
@@ -418,7 +418,7 @@ void runTrial(ceinms::DataTable<double> &trial) {
         p.optimalFiberLength * std::cos(p.pennationAngleAtOptimalFiberLength)
         + p.tendonSlackLength;
     DoubleT posOffset = -2.0e-3;// m
-    ceinms::Lloyd2003Muscle muscle(p);
+    ceinms::Lloyd2019Muscle muscle(p);
 
     auto times = trial.getTimeColumn();
     auto displacements = trial.getColumn("Experimental_displacement_mm");
