@@ -19,7 +19,7 @@ add_library(modeling STATIC ${modeling_HEADERS} ${modeling_TEMPLATE_IMPLEMENTATI
 set_target_properties(modeling PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(modeling PUBLIC common)
 target_include_directories(modeling PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                                        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+                                        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> ${Boost_INCLUDE_DIRS})
 
 install(TARGETS modeling
 	EXPORT CEINMSTargets

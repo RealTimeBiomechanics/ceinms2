@@ -353,7 +353,7 @@ double Curve<mode, T, N>::getValue(double xalue,
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 double Curve<mode, T, N>::getFirstDerivative(double xValue) const {
-    int n = x_.size();
+    size_t n = x_.size();
     double yValue(.0);
     if (n <= 0) return yValue;
     if (xValue < x_.at(0))
@@ -373,7 +373,7 @@ template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 double Curve<mode, T, N>::getFirstDerivative(double xValue,
     size_t abscissaPoint,
     Int2Type<CurveMode::Cubic>) const {
-    unsigned k(abscissaPoint);
+    size_t k(abscissaPoint);
     double dx = xValue - x_.at(k);
     if (nearly_equal(dx, 0.)) return b_.at(k);
     return (b_.at(k) + dx * (2.0 * c_.at(k) + 3.0 * dx * d_.at(k)));

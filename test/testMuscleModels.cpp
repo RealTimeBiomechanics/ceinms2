@@ -71,8 +71,8 @@ static ceinms::DataTable<T> fillFromCSV(const string filename,
     return data;
 }
 
-
-void printStep(ceinms::Lloyd2003Muscle &muscle) {
+template<typename MuscleT>
+void printStep(MuscleT &muscle) {
     std::ofstream outF("outStepResponse.csv");
     DoubleT mtuLStart = 2.1, mtuLStop = 2.3, activation = 0.5;
     muscle.setActivation(activation);
@@ -95,7 +95,7 @@ void printStep(ceinms::Lloyd2003Muscle &muscle) {
     }
 }
 
-
+template<typename MuscleT>
 void runTrial(ceinms::DataTable<double> &trial) {
     const vector<DoubleT> act_x{ 0.4241,
         0.4641,
@@ -167,12 +167,12 @@ void runTrial(ceinms::DataTable<double> &trial) {
         13.0944,
         13.6556 };
 
-    ceinms::CurveOffline act(act_x, act_y);
-    ceinms::CurveOffline pas(pas_x, pas_y);
-    ceinms::CurveOffline vel(vel_x, vel_y);
-    ceinms::CurveOffline ten(ten_x, ten_y);
+    ceinms::CubicSpline act( act_x, act_y );
+    ceinms::CubicSpline pas( pas_x, pas_y );
+    ceinms::CubicSpline vel( vel_x, vel_y );
+    ceinms::CubicSpline ten( ten_x, ten_y );
 
-    ceinms::Lloyd2003Muscle::Parameters p;
+    typename MuscleT::Parameters p;
     p.damping = 0.1;
     p.maxContractionVelocity = 5.3156293513;
     p.maxIsometricForce = 1.2758948506;
@@ -190,7 +190,7 @@ void runTrial(ceinms::DataTable<double> &trial) {
         p.optimalFiberLength * std::cos(p.pennationAngleAtOptimalFiberLength)
         + p.tendonSlackLength;
     DoubleT posOffset = -2.0e-3;// m
-    ceinms::Lloyd2003Muscle muscle(p);
+    MuscleT muscle(p);
 
     auto times = trial.getTimeColumn();
     auto displacements = trial.getColumn("Experimental_displacement_mm");
@@ -219,6 +219,7 @@ In their paper, Millard et al. report mean absolute errors relative to experimen
 maximum isometric force between 3.3% and 8.9%. This test will fail if the calculated error for this same test
 is greater than 10%.
 */
+template<typename MuscleT>
 bool runMillardBenchmark() {
     // 1.17 is the experimentally measured maximum isometric force. See Millard et al. 2013
     double experimentallyMeasuredFiso = 1.17;
@@ -241,7 +242,7 @@ bool runMillardBenchmark() {
     auto normalisedDisplacement =
         normalisedDisplacementDataTable.getColumn("displacement_mm");
     auto times = normalisedDisplacementDataTable.getTimeColumn();
-    ceinms::CurveOffline displacementCurve{ times, normalisedDisplacement };
+    ceinms::Curve<ceinms::CurveMode::Offline> displacementCurve{ times, normalisedDisplacement };
 
     auto squareError = [](double a, double b) {
         double e = a - b;
@@ -262,7 +263,7 @@ bool runMillardBenchmark() {
                 displacementCurve.getValue(t) * disp);
         currentTrial.pushColumn(
             "Experimental_displacement_mm", currentDisplacementData);
-        runTrial(currentTrial);
+        runTrial<MuscleT>(currentTrial);
         auto experimentalForce = currentTrial.getColumn("Experimental_Force_N");
         auto predictedForce = currentTrial.getColumn("Predicted_Force_N");
         
@@ -283,6 +284,6 @@ bool runMillardBenchmark() {
 }
 
 int main() {
-    bool failed = runMillardBenchmark();
+    bool failed = runMillardBenchmark<ceinms::Lloyd2003Muscle>();
     return failed;
 }
