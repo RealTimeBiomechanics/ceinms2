@@ -94,14 +94,14 @@ class Curve {
     void removeLastPointNoUpdate();// remove last point without computing the
                                    // coefficients again
     // interpolation
-    [[nodiscard]] double getValue(double xValue) const;
-    [[nodiscard]] double getFirstDerivative(double xValue) const;
-    [[nodiscard]] double getSecondDerivative(double xValue) const;
-    [[nodiscard]] double getMinX() const {
+    [[nodiscard]] constexpr double getValue(double xValue) const;
+    [[nodiscard]] constexpr double getFirstDerivative(double xValue) const;
+    [[nodiscard]] constexpr double getSecondDerivative(double xValue) const;
+    [[nodiscard]] constexpr double getMinX() const {
         if (!x_.empty()) return x_.front();
         return 0;
     }
-    [[nodiscard]] double getMaxX() const {
+    [[nodiscard]] constexpr double getMaxX() const {
         if (!x_.empty()) return x_.back();
         return 0;
     }
@@ -117,14 +117,14 @@ class Curve {
     void computeCoefficients(Int2Type<CurveMode::Cubic>);
     void computeCoefficients(Int2Type<CurveMode::Linear>);
 
-    [[nodiscard]] double
+    [[nodiscard]] constexpr double
         getValue(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const;
-    [[nodiscard]] double
+    [[nodiscard]] constexpr double
         getValue(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const;
 
-    [[nodiscard]] double
+    [[nodiscard]] constexpr double
         getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Cubic>) const;
-    [[nodiscard]] double
+    [[nodiscard]] constexpr double
         getFirstDerivative(double xValue, size_t abscissaPoint, Int2Type<CurveMode::Linear>) const;
 
     [[nodiscard]] size_t getAbscissaPoint(double xValue) const;

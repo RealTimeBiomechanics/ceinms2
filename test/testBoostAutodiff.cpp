@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <random>
+
 #include "ceinms2/Lloyd2003Muscle.h"
 
 using namespace boost::math::differentiation;
@@ -117,12 +119,54 @@ bool test4() {
     return failed;
 }
 
+bool test5() {
+    using boost::math::epsilon_difference;
+
+    auto fun([](auto x) {
+        if (x > 0)
+            return x * x;
+        else
+            return x * x * x;
+        });
+
+    auto dfun([](auto x) {
+        if (x > 0)
+            return 2*x;
+        else
+            return 3 * x * x;
+    });
+
+    // Get derivative through object-provided method
+
+    std::random_device rd;// Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd());// Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis(-10.0, 20.0);
+    bool failed = false;
+    for (int n = 0; n < 100; ++n) {
+        auto const val = dis(gen);
+        auto const x = make_fvar<double, 1>(val);
+        //check the value of the two derivatives is the same, within 2 epsilons 
+        bool isEqual = epsilon_difference(fun(x).derivative(1),dfun(val)) < 2.0;
+        std::cout << fun(x).derivative(1) << "=?" << dfun(val);
+        if (isEqual) 
+            std::cout << " True";
+        else
+            std::cout << " False";
+        std::cout << std::endl;
+        failed |= !isEqual;
+    }
+    return failed;
+}
+
+
 int main() {
     bool failed = false;
     failed |= test1();
     failed |= test2();
     failed |= test3();
     failed |= test4();
+    failed |= test5();
+
     return failed;
 }
 

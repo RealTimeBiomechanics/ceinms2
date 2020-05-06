@@ -20,20 +20,26 @@ class CubicSpline {
     CubicSpline(const Parameters &p) { set(p); }
     CubicSpline(const std::vector<DoubleT> &x, const std::vector<DoubleT> &y) { set({ x, y }); }
 
-    DoubleT get(DoubleT x) const {
+    constexpr DoubleT get(DoubleT x) const {
         x = std::min(x, spline_.getMaxX());
         x = std::max(x, spline_.getMinX());
         return spline_.getValue(x);
     }
 
-    DoubleT getFirstDerivative(DoubleT x) const {
+    constexpr DoubleT getFirstDerivative(DoubleT x) const {
         x = std::min(x, spline_.getMaxX());
         x = std::max(x, spline_.getMinX());
         return spline_.getFirstDerivative(x);
     }
 
+     constexpr DoubleT getSecondDerivative(DoubleT x) const {
+        x = std::min(x, spline_.getMaxX());
+        x = std::max(x, spline_.getMinX());
+        return spline_.getSecondDerivative(x);
+    }
+
     template<typename T>
-    auto get(const T &cr) const {
+    constexpr auto get(const T &cr) const {
         using root_type = typename T::root_type;
         constexpr size_t order = T::order_sum;
         root_type const d0 = get(static_cast<root_type>(cr));
@@ -41,9 +47,10 @@ class CubicSpline {
             return fvar(d0);
         else {
             const root_type d1 = getFirstDerivative(static_cast<root_type>(cr));
-            const root_type derivatives[2]{ d0, d1 };
+            const root_type d2 = getSecondDerivative(static_cast<root_type>(cr));
+            const root_type derivatives[3]{ d0, d1, d2 };
             return cr.apply_derivatives(
-                order, [&derivatives](size_t i) { return derivatives[i & 1]; });
+                order, [&derivatives](size_t i) { return derivatives[i & 2]; });
         }
     }
 
@@ -179,6 +186,9 @@ class Lloyd2003Muscle {
         DoubleT tendonLength{ 0. };
         DoubleT tendonStrain{ 0. };
         DoubleT tendonForce{ 0. };
+        DoubleT musculotendonStiffness{ 0. };
+        DoubleT fiberStiffness{ 0. };
+        DoubleT tendonStiffness{ 0. };
         DoubleT fa{ 0. };
         DoubleT fv{ 0. };
         DoubleT fp{ 0. };
@@ -222,61 +232,65 @@ class Lloyd2003Muscle {
     /* calculateXYZ functions perform calculations and return the calculated
      * value*/
     template<typename W, typename X, typename T>
-    static auto calculateFiberVelocityFromFiberLength(const W& previousFiberLength,
+    static constexpr auto calculateFiberVelocityFromFiberLength(const W& previousFiberLength,
         const X& currentFiberLength,
         const T& dt);
 
     template<typename W, typename X, typename Y>
-    static auto calculateFiberForce(const W& activation,
+    static constexpr auto calculateFiberForce(const W &activation,
         const X& fiberLength,
         const Y& fiberVelocity,
         const Parameters &p);
 
-    template<typename W, typename X, typename Y>
-    static auto calculateFiberStiffness(const W& activation,
-        const X& fiberLength,
-        const Y& fiberVelocity,
+    static DoubleT calculateFiberStiffness(DoubleT activation,
+        DoubleT fiberLength,
+        DoubleT fiberVelocity,
         const Parameters &p);
 
-  
-    template<typename W>
-    static auto calculatePennationAngle(const W& fiberLength, const Parameters &p);
-
-    template<typename W>
-    static auto calculateOptimalFiberLengthAtT(const W& activation, const Parameters &p);
-
-    template<typename W, typename X>
-    static auto calculateNormalisedFiberLengthAtT(const W& activation,
-        const X& fiberLength,
+    static DoubleT calculateMusculotendonStiffness(DoubleT activation,
+        DoubleT musculotendonLenght,
+        DoubleT fiberLength,
+        DoubleT fiberVelocity,
         const Parameters &p);
 
     template<typename W>
-    static auto calculateNormalisedFiberLength(const W& fiberLength, const Parameters &p);
+    static constexpr auto calculatePennationAngle(const W &fiberLength, const Parameters &p);
 
     template<typename W>
-    static auto calculateNormalisedFiberVelocity(const W& fiberVelocity, const Parameters &p);
+    static constexpr auto calculateOptimalFiberLengthAtT(const W &activation, const Parameters &p);
 
     template<typename W, typename X>
-    static auto calculateTendonLength(const W& musculotendonLength,
+    static constexpr auto calculateNormalisedFiberLengthAtT(const W &activation,
+        const X& fiberLength,
+        const Parameters &p);
+
+    template<typename W>
+    static constexpr auto calculateNormalisedFiberLength(const W &fiberLength, const Parameters &p);
+
+    template<typename W>
+    static constexpr auto calculateNormalisedFiberVelocity(const W &fiberVelocity,
+        const Parameters &p);
+
+    template<typename W, typename X>
+    static constexpr auto calculateTendonLength(const W &musculotendonLength,
         const X& fiberLength,
         const Parameters &p);
 
     template<typename W, typename X>
-    static auto calculateTendonStrain(const W& musculotendonLength,
+    static constexpr auto calculateTendonStrain(const W &musculotendonLength,
         const X& fiberLength,
         const Parameters &p);
 
     template<typename W, typename X>
-    static auto calculateTendonForce(const W &musculotendonLength,
+    static constexpr auto calculateTendonForce(const W &musculotendonLength,
         const X &fiberLength,
         const Parameters &p);
 
-    static DoubleT calculateTendonStiffness(DoubleT musculotendonLength,
+    static constexpr DoubleT calculateTendonStiffness(DoubleT musculotendonLength,
         const DoubleT fiberLength,
         const Parameters &p);
 
   private:
-
     DoubleT integrateFiberLength(DoubleT dt);
     std::string name_;
     Parameters p_;
@@ -306,9 +320,8 @@ void Lloyd2003Muscle::setState(State state) {
     s_ = state;
 }
 
-
 template<typename W, typename X, typename T>
-auto Lloyd2003Muscle::calculateFiberVelocityFromFiberLength(
+constexpr auto Lloyd2003Muscle::calculateFiberVelocityFromFiberLength(
     const W& previousFiberLength,
     const X& currentFiberLength,
     const T& dt) {
@@ -316,26 +329,26 @@ auto Lloyd2003Muscle::calculateFiberVelocityFromFiberLength(
 }
 
 template<typename W>
-auto Lloyd2003Muscle::calculateOptimalFiberLengthAtT(const W& activation,
+constexpr auto Lloyd2003Muscle::calculateOptimalFiberLengthAtT(const W &activation,
     const Parameters &p) {
     return p.optimalFiberLength * (p.percentageChange * (1.0 - activation) + 1);
 }
 
 template<typename W, typename X>
-auto Lloyd2003Muscle::calculateNormalisedFiberLengthAtT(const W& activation,
+constexpr auto Lloyd2003Muscle::calculateNormalisedFiberLengthAtT(const W &activation,
     const X& fiberLength,
     const Parameters &p) {
     return fiberLength / calculateOptimalFiberLengthAtT(activation, p);
 }
 
 template<typename W>
-auto Lloyd2003Muscle::calculateNormalisedFiberLength(const W& fiberLength,
+constexpr auto Lloyd2003Muscle::calculateNormalisedFiberLength(const W &fiberLength,
     const Parameters &p) {
     return fiberLength / p.optimalFiberLength;
 }
 
 template<typename W>
-auto Lloyd2003Muscle::calculateNormalisedFiberVelocity(const W& fiberVelocity,
+constexpr auto Lloyd2003Muscle::calculateNormalisedFiberVelocity(const W &fiberVelocity,
     const Parameters &p) {
     auto normalisedFiberVelocity =
         fiberVelocity / (p.optimalFiberLength * p.maxContractionVelocity);
@@ -345,7 +358,7 @@ auto Lloyd2003Muscle::calculateNormalisedFiberVelocity(const W& fiberVelocity,
 }
 
 template<typename W>
-auto Lloyd2003Muscle::calculatePennationAngle(const W& fiberLength,
+constexpr auto Lloyd2003Muscle::calculatePennationAngle(const W &fiberLength,
     const Parameters &p) {
     auto value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
     if (value < 0) { value = 0; }
@@ -354,14 +367,14 @@ auto Lloyd2003Muscle::calculatePennationAngle(const W& fiberLength,
 }
 
 template<typename W, typename X>
-auto Lloyd2003Muscle::calculateTendonLength(const W& musculotendonLength,
+constexpr auto Lloyd2003Muscle::calculateTendonLength(const W &musculotendonLength,
     const X& fiberLength,
     const Parameters &p) {
     return musculotendonLength - fiberLength * cos(calculatePennationAngle(fiberLength, p));
 }
 
 template<typename W, typename X>
-auto Lloyd2003Muscle::calculateTendonStrain(const W& musculotendonLength,
+constexpr auto Lloyd2003Muscle::calculateTendonStrain(const W &musculotendonLength,
     const X& fiberLength,
     const Parameters &p) {
     auto tendonStrain =
@@ -372,7 +385,7 @@ auto Lloyd2003Muscle::calculateTendonStrain(const W& musculotendonLength,
 }
 
 template<typename W, typename X, typename Y>
-auto Lloyd2003Muscle::calculateFiberForce(const W& activation,
+constexpr auto Lloyd2003Muscle::calculateFiberForce(const W &activation,
     const X& fiberLength,
     const Y& fiberVelocity,
     const Parameters &p) {
@@ -385,24 +398,39 @@ auto Lloyd2003Muscle::calculateFiberForce(const W& activation,
     const auto fp{ p.passiveForceLengthCurve.get(normalisedFiberLength) };
     const auto fv{ p.forceVelocityCurve.get(normalisedFiberVelocity) };
 
-    auto fiberForce{ p.maxIsometricForce * p.strengthCoefficient
+    const auto fiberForce{ p.maxIsometricForce * p.strengthCoefficient
                         * (fa * fv * activation + fp + p.damping * normalisedFiberVelocity)
                         * cos(pennationAngle) };
     // clamp muscle force
-    if (fiberForce < 0.) { fiberForce = 0; }
+    if (fiberForce < 0.) 
+        return decltype(fiberForce){ 0. };
     return fiberForce;
 }
 
-template<typename W, typename X, typename Y>
-static auto Lloyd2003Muscle::calculateFiberStiffness(const W& activation,
-    const X& fiberLength,
-    const Y& fiberVelocity,
+DoubleT Lloyd2003Muscle::calculateFiberStiffness(DoubleT activation,
+    DoubleT fiberLength,
+    DoubleT fiberVelocity,
     const Parameters &p) {
-    return 0.
+
+    using boost::math::differentiation::make_fvar;
+    const auto flen = make_fvar<DoubleT, 1>(fiberLength);
+    const auto force = calculateFiberForce(activation, flen, fiberVelocity, p);
+    return force.derivative(1);
+}
+
+DoubleT Lloyd2003Muscle::calculateMusculotendonStiffness(DoubleT activation,
+    DoubleT musculotendonLenght,
+    DoubleT fiberLength,
+    DoubleT fiberVelocity,
+    const Parameters& p) {
+    const DoubleT tendonStiffness = calculateTendonStiffness(musculotendonLenght, fiberLength, p);
+    const DoubleT fiberStiffness =
+        calculateFiberStiffness(activation, fiberLength, fiberVelocity, p);
+    return 1./(1. / tendonStiffness + 1. / fiberStiffness);
 }
 
 template<typename W, typename X>
-auto Lloyd2003Muscle::calculateTendonForce(const W& musculotendonLength,
+constexpr auto Lloyd2003Muscle::calculateTendonForce(const W &musculotendonLength,
     const X& fiberLength,
     const Parameters &p) {
     const auto tendonStrain{ calculateTendonStrain(musculotendonLength, fiberLength, p) };
@@ -411,9 +439,10 @@ auto Lloyd2003Muscle::calculateTendonForce(const W& musculotendonLength,
     return tendonForce;
 }
 
-DoubleT Lloyd2003Muscle::calculateTendonStiffness(DoubleT musculotendonLength,
+constexpr DoubleT Lloyd2003Muscle::calculateTendonStiffness(DoubleT musculotendonLength,
     const DoubleT fiberLength,
     const Parameters &p) {
+
     const auto tendonStrain{ calculateTendonStrain(musculotendonLength, fiberLength, p) };
     const auto tendonStiffness{ p.tendonForceStrainCurve.getFirstDerivative(tendonStrain) };
     return tendonStiffness;
@@ -457,6 +486,10 @@ void Lloyd2003Muscle::calculateOutput() {
     o_.tendonStrain = calculateTendonStrain(i_.musculotendonLength, s_.fiberLength, p_);
     o_.tendonLength = calculateTendonLength(i_.musculotendonLength, s_.fiberLength, p_);
     o_.tendonForce = calculateTendonForce(i_.musculotendonLength, s_.fiberLength, p_);
+    o_.musculotendonStiffness = calculateMusculotendonStiffness(
+        i_.activation, i_.musculotendonLength, s_.fiberLength, s_.fiberVelocity, p_);
+    o_.fiberStiffness = calculateFiberStiffness(i_.activation, s_.fiberLength, s_.fiberVelocity, p_);
+    o_.tendonStiffness = calculateTendonStiffness(i_.musculotendonLength, s_.fiberLength, p_);
 }
 void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
