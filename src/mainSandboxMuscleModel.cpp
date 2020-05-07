@@ -1,40 +1,56 @@
-/*This is a simple test from the official boost documentation to assess whether boost libraries have
- * been installed correctly
- */
-#include <boost/math/differentiation/autodiff.hpp>
-#include <boost/math/differentiation/finite_difference.hpp>
-
+#include "ceinms2/Lloyd2003Muscle.h"
+#include "ceinms2/DataTable.h"
 #include <iostream>
 #include <vector>
-
-template<typename T>
-T fourth_power(T const &x) {
-    T x4 = x * x;// retval in operator*() uses x4's memory via NRVO.
-    x4 *= x4;// No copies of x4 are made within operator*=() even when squaring.
-    return x4;// x4 uses y's memory in main() via NRVO.
-}
+#include <string>
+#include <filesystem>
+using namespace ceinms;
+using std::string;
 
 int main() {
-    using namespace boost::math::differentiation;
 
-    constexpr unsigned Order = 5;// Highest order derivative to be calculated.
-    auto const x = make_fvar<double, Order>(2.0);// Find derivatives at x=2.
-    auto const y = fourth_power(x);
-    const std::vector<double> expected{ 16., 32., 48., 48., 24., 0. };
-    bool failed = false;
-    for (unsigned i = 0; i <= Order; ++i) {
-        std::cout << "y.derivative(" << i << ") = " << y.derivative(i) << std::endl;
-        failed |= (y.derivative(i) != expected.at(i)); 
+    const CubicSpline act{ ceinms::getDefaultActiveForceLengthCurve() };
+    const CubicSpline pas(ceinms::getDefaultPassiveForceLengthCurve());
+    const CubicSpline vel(ceinms::getDefaultForceVelocityCurve());
+    const CubicSpline ten(ceinms::getDefaultTendonForceStrainCurve());
+
+    Lloyd2003Muscle::Parameters p;
+    p.damping = 0.1;
+    p.maxContractionVelocity = 10;
+    p.maxIsometricForce = 6194;
+    p.optimalFiberLength = 0.04;
+    p.pennationAngleAtOptimalFiberLength = 0.38;
+    p.percentageChange = 0.15;
+    p.strengthCoefficient = 1;
+    p.tendonSlackLength = 0.259;
+    p.activeForceLengthCurve = act;
+    p.passiveForceLengthCurve = pas;
+    p.forceVelocityCurve = vel;
+    p.tendonForceStrainCurve = ten;
+
+	Lloyd2003Muscle mtu(p);
+    std::filesystem::path root(ROOT_DIR);
+    std::filesystem::path filename{ root
+                                    / std::filesystem::path("data/gait/soleus.csv") };
+    DataTable<double> data = fillFromCSV<double>(filename.string());
+    vector<double> activation = data.getColumn("activation");
+    vector<double> mtuLength = data.getColumn("mtuLength");
+    vector<double> mtuStiffness, fiberStiffness, tendonStiffness;
+    mtu.equilibrate();
+    for (int i{ 0 }; i < activation.size(); ++i) {
+        mtu.setActivation(activation.at(i));
+        mtu.setMusculotendonLength(mtuLength.at(i));
+        mtu.evaluate(0.005);
+        mtu.calculateOutput();
+        mtuStiffness.push_back(mtu.getOutput().musculotendonStiffness);
+        fiberStiffness.push_back(mtu.getOutput().fiberStiffness);
+        tendonStiffness.push_back(mtu.getOutput().tendonStiffness);
     }
-    return failed;
+    data.pushColumn("mtuStiffness", mtuStiffness);
+    data.pushColumn("fiberStiffness", fiberStiffness);
+    data.pushColumn("tendonStiffness", tendonStiffness);
+
+    data.print("outStiffness.csv");
+    return 0;
 }
 
-/*
-Output:
-y.derivative(0) = 16
-y.derivative(1) = 32
-y.derivative(2) = 48
-y.derivative(3) = 48
-y.derivative(4) = 24
-y.derivative(5) = 0
-*/

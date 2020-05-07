@@ -444,7 +444,8 @@ constexpr DoubleT Lloyd2003Muscle::calculateTendonStiffness(DoubleT musculotendo
     const Parameters &p) {
 
     const auto tendonStrain{ calculateTendonStrain(musculotendonLength, fiberLength, p) };
-    const auto tendonStiffness{ p.tendonForceStrainCurve.getFirstDerivative(tendonStrain) };
+    const auto tendonStiffness{ p.strengthCoefficient * p.maxIsometricForce
+                                * p.tendonForceStrainCurve.getFirstDerivative(tendonStrain) };
     return tendonStiffness;
 }
 
