@@ -4,6 +4,9 @@ compiler:
 - gcc
 os:
 - linux
+env:
+- VCPKG_TRIPLET=x64-linux
+- VCPKG_ROOT=${HOME}/deps/vcpkg
 
 addons:
   apt:
@@ -16,7 +19,7 @@ addons:
     - doxygen
     update: true
     
-install:
+before_install:
   - wget https://github.com/Kitware/CMake/releases/download/v3.15.0-rc3/cmake-3.15.0-rc3-Linux-x86_64.tar.gz
   - tar -xf cmake-3.15.0-rc3-Linux-x86_64.tar.gz
   - sudo ln -s ${TRAVIS_BUILD_DIR}/cmake-3.15.0-rc3-Linux-x86_64/bin/cmake /home/travis/bin/cmake
@@ -27,6 +30,22 @@ install:
   - echo ${CXX}
   - ${CXX} --version
   - cmake --version
+  
+install:
+   # Install vcpkg and dependencies
+  - |
+    set -e
+    mkdir -p ${VCPKG_ROOT}
+    pushd ${VCPKG_ROOT}
+    git init
+    git remote add origin https://github.com/Microsoft/vcpkg.git
+    git fetch origin master
+    git checkout -b master origin/master
+    ./bootstrap-vcpkg.sh
+    # Only build release libs to save time. We inject a new line first since some cmake files don't end with one.
+    echo -e '\nset(VCPKG_BUILD_TYPE release)' >> ./triplets/${VCPKG_TRIPLET}.cmake
+    ./vcpkg install boost-math
+    popd
 
 script:
   - cmake .
