@@ -4,9 +4,7 @@ compiler:
 - gcc
 os:
 - linux
-env:
-- VCPKG_TRIPLET=x64-linux
-- VCPKG_ROOT=${HOME}/deps/vcpkg
+
 
 addons:
   apt:
@@ -30,6 +28,8 @@ before_install:
   - echo ${CXX}
   - ${CXX} --version
   - cmake --version
+  - export VCPKG_TRIPLET=x64-linux
+  - export VCPKG_ROOT=${HOME}/deps/vcpkg
   
 install:
    # Install vcpkg and dependencies
