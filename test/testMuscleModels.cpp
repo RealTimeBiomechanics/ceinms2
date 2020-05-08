@@ -15,62 +15,6 @@ using std::vector;
 using std::string;
 
 constexpr double pi = 3.14159265358979323846;
-using DoubleT = double;
-vector<string> tokenize(const string &line, char sep = ',') {
-    vector<string> result;
-    size_t first(0), last(0);
-    if (line.find(sep) == string::npos)
-        result.emplace_back(line);
-    else {
-        while (last < line.size()) {
-            if (line[last] == '\"') {
-                last++;
-                last =
-                    line.substr(last, line.size() - last).find('\"') + last + 1;
-            } else if (line[last] == sep) {
-                result.emplace_back(line.substr(first, last - first));
-                first = ++last;
-            } else
-                ++last;
-        }
-        if (last != first)
-            result.emplace_back(line.substr(first, last - first));
-    }
-    return result;
-}
-
-template<typename T>
-static ceinms::DataTable<T> fillFromCSV(const string filename,
-    const char sep = ',',
-    unsigned skiprows = 0) {
-    ceinms::DataTable<T> data;
-    std::ifstream inF(filename);
-    if (!inF.is_open()) {
-        std::cout << "Cannot open " << filename << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    string line;
-    for (unsigned i = 0; i < skiprows; ++i) getline(inF, line, '\n');
-    getline(inF, line, '\n');
-    auto labels(tokenize(line, sep));
-    data.setLabels(vector<string>(labels.begin() + 1, labels.end()));
-
-    while (!inF.eof()) {
-        getline(inF, line);
-        if (!line.empty()) {
-            vector<string> result(tokenize(line, sep));
-            vector<T> values;
-            std::transform(std::begin(result),
-                std::end(result),
-                std::back_inserter(values),
-                [](std::string v) { return std::stod(v); });
-            data.pushRow(
-                values.at(0), std::vector<T>(values.begin() + 1, values.end()));
-        }
-    }
-    return data;
-}
 
 template<typename MuscleT>
 void printStep(MuscleT &muscle) {

@@ -360,9 +360,9 @@ constexpr auto Lloyd2003Muscle::calculateNormalisedFiberVelocity(const W &fiberV
 template<typename W>
 constexpr auto Lloyd2003Muscle::calculatePennationAngle(const W &fiberLength,
     const Parameters &p) {
-    auto value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
-    if (value < 0) { value = 0; }
-    if (value > 0.99) { value = 0.99; }
+    const auto value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
+    if (value < 0) { return decltype(value){ 0 }; }
+    if (value > 0.99) { return decltype(value){ 0.99 }; }
     return asin(value);
 }
 
