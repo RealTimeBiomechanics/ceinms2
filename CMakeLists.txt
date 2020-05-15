@@ -47,7 +47,7 @@ if (ENABLE_PCH)
   target_precompile_headers(project_options INTERFACE <vector> <string> <map> <utility>)
 endif()
 
-find_package(Boost REQUIRED)
+find_package(Boost 1.72 REQUIRED)
 
 if(ENABLE_TESTING)
   enable_testing()
