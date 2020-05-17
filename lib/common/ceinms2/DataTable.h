@@ -141,19 +141,19 @@ static ceinms::DataTable<T>
         exit(EXIT_FAILURE);
     }
 
-    string line;
+    std::string line;
     for (unsigned i = 0; i < skiprows; ++i)
         getline(inF, line, '\n');
     getline(inF, line, '\n');
     auto labels(tokenize(line, sep));
-    data.setLabels(vector<string>(labels.begin() + 1, labels.end()));
+    data.setLabels(std::vector<std::string>(labels.begin() + 1, labels.end()));
 
     while (!inF.eof()) {
         getline(inF, line);
         if (!line.empty()) {
-            vector<string> result(tokenize(line, sep));
-            vector<T> values;
-            std::transform(std::begin(result),
+		std::vector<std::string> result(tokenize(line, sep));
+		std::vector<T> values;
+            	std::transform(std::begin(result),
                 std::end(result),
                 std::back_inserter(values),
                 [](std::string v) { return std::stod(v); });
