@@ -95,7 +95,7 @@ class Stage {
                 , s(childSocket) {}
             const std::shared_ptr<U> p;
             const Socket s;
-            void operator()(T &child) { connectSocket<U, T>(*p, child, s.getSlot()); }
+            void operator()(T &child) { connectSocket(*p, child, s.getSlot()); }
         };
 
         if (!childSocket.hasSlot()) {

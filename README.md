@@ -4,7 +4,6 @@
 Install VCPKG
 
 Install boost using vcpkg
-./vcpkg install boost-math:x66-windows
+./vcpkg install boost-math:x64-windows
 
 Set environment variable VCPKG_ROOT to the install directory of vcpkg
-
