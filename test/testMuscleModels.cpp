@@ -70,7 +70,7 @@ double runTrial(ceinms::DataTable<double> &trial) {
 
     auto times = trial.getTimeColumn();
     auto displacements = trial.getColumn("Experimental_displacement_mm");
-    vector<DoubleT> outForce;
+    vector<DoubleT> outForce, outStiffness;
     auto startTime = std::chrono::system_clock::now();
     for (size_t i{ 0 }; i < times.size(); ++i) {
         DoubleT disp = displacements.at(i);
@@ -84,10 +84,11 @@ double runTrial(ceinms::DataTable<double> &trial) {
         muscle.validateState();
         muscle.calculateOutput();
         outForce.push_back(muscle.getOutput().tendonForce);
+        outStiffness.push_back(muscle.getOutput().musculotendonStiffness);
     }
     auto stopTime = std::chrono::system_clock::now();
     trial.pushColumn("Predicted_Force_N", outForce);
-
+    trial.pushColumn("Predicted_MTUstiffness_N", outStiffness);
     return std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime).count()/1000.;
 }
 

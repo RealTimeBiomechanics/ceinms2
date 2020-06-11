@@ -51,6 +51,12 @@ int main() {
     data.pushColumn("tendonStiffness", tendonStiffness);
 
     data.print("outStiffness.csv");
+
+    double baseVel = mtu.getState().fiberVelocity;
+    mtu.integrate(0.1);
+    mtu.validateState();
+    mtu.getState().fiberVelocity = 0;
+    mtu.calculateOutput();
     return 0;
 }
 
