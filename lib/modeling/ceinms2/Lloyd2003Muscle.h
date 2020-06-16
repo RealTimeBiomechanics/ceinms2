@@ -358,11 +358,11 @@ constexpr auto Lloyd2003Muscle::calculateNormalisedFiberVelocity(const W &fiberV
 }
 
 template<typename W>
-constexpr auto Lloyd2003Muscle::calculatePennationAngle(const W &fiberLength,
-    const Parameters &p) {
-    const auto value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength) / fiberLength };
-    if (value < 0) { return decltype(value){ 0 }; }
-    if (value > 0.99) { return decltype(value){ 0.99 }; }
+constexpr auto Lloyd2003Muscle::calculatePennationAngle(const W &fiberLength, const Parameters &p) {
+    const auto value{ p.optimalFiberLength * sin(p.pennationAngleAtOptimalFiberLength)
+                      / fiberLength };
+    if (value < 0) { return decltype(value){ asin(0) }; }
+    if (value > 0.99) { return decltype(value){ asin(0.99) }; }
     return asin(value);
 }
 
@@ -444,7 +444,7 @@ constexpr DoubleT Lloyd2003Muscle::calculateTendonStiffness(DoubleT musculotendo
     const Parameters &p) {
 
     const auto tendonStrain{ calculateTendonStrain(musculotendonLength, fiberLength, p) };
-    const auto tendonStiffness{ p.strengthCoefficient * p.maxIsometricForce / p.tendonSlackLength *
+    const auto tendonStiffness{ p.strengthCoefficient * p.maxIsometricForce / p.tendonSlackLength 
                                 * p.tendonForceStrainCurve.getFirstDerivative(tendonStrain) };
     return tendonStiffness;
 }
