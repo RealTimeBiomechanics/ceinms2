@@ -242,11 +242,22 @@ class Lloyd2003Muscle {
         const Y& fiberVelocity,
         const Parameters &p);
 
+    template<typename W, typename X, typename Y>
+    static constexpr auto calculateFiberForceProjectedOnTendon(const W &activation,
+        const X &fiberLength,
+        const Y &fiberVelocity,
+        const Parameters &p);
+
     static DoubleT calculateFiberStiffness(DoubleT activation,
         DoubleT fiberLength,
         DoubleT fiberVelocity,
         const Parameters &p);
 
+    static DoubleT calculateFiberStiffnessProjectedOnTendon(DoubleT activation,
+        DoubleT fiberLength,
+        DoubleT fiberVelocity,
+        const Parameters &p);
+    
     static DoubleT calculateMusculotendonStiffness(DoubleT activation,
         DoubleT musculotendonLenght,
         DoubleT fiberLength,
@@ -399,12 +410,21 @@ constexpr auto Lloyd2003Muscle::calculateFiberForce(const W &activation,
     const auto fv{ p.forceVelocityCurve.get(normalisedFiberVelocity) };
 
     const auto fiberForce{ p.maxIsometricForce * p.strengthCoefficient
-                        * (fa * fv * activation + fp + p.damping * normalisedFiberVelocity)
-                        * cos(pennationAngle) };
+                        * (fa * fv * activation + fp + p.damping * normalisedFiberVelocity)};
     // clamp muscle force
     if (fiberForce < 0.) 
         return decltype(fiberForce){ 0. };
     return fiberForce;
+}
+
+template<typename W, typename X, typename Y>
+constexpr auto Lloyd2003Muscle::calculateFiberForceProjectedOnTendon(const W &activation,
+    const X &fiberLength,
+    const Y &fiberVelocity,
+    const Parameters &p) {
+    
+    const auto pennationAngle{ calculatePennationAngle(fiberLength, p) };
+    return calculateFiberForce(activation, fiberLength, fiberVelocity, p) * cos(pennationAngle);
 }
 
 DoubleT Lloyd2003Muscle::calculateFiberStiffness(DoubleT activation,
@@ -418,15 +438,27 @@ DoubleT Lloyd2003Muscle::calculateFiberStiffness(DoubleT activation,
     return force.derivative(1);
 }
 
+DoubleT Lloyd2003Muscle::calculateFiberStiffnessProjectedOnTendon(DoubleT activation,
+    DoubleT fiberLength,
+    DoubleT fiberVelocity,
+    const Parameters &p) {
+    using boost::math::differentiation::make_fvar;
+    const auto flen = make_fvar<DoubleT, 1>(fiberLength);
+    const auto force = calculateFiberForceProjectedOnTendon(activation, flen, fiberVelocity, p);
+    DoubleT pennationAngle = calculatePennationAngle(fiberLength, p);
+    //To check
+    return force.derivative(1) * cos(pennationAngle);
+}
+
 DoubleT Lloyd2003Muscle::calculateMusculotendonStiffness(DoubleT activation,
     DoubleT musculotendonLenght,
     DoubleT fiberLength,
     DoubleT fiberVelocity,
     const Parameters& p) {
     const DoubleT tendonStiffness = calculateTendonStiffness(musculotendonLenght, fiberLength, p);
-    const DoubleT fiberStiffness =
-        calculateFiberStiffness(activation, fiberLength, fiberVelocity, p);
-    return 1./(1. / tendonStiffness + 1. / fiberStiffness);
+    const DoubleT fiberStiffnessProjectedOnTendon =
+        calculateFiberStiffnessProjectedOnTendon(activation, fiberLength, fiberVelocity, p);
+    return 1./(1. / tendonStiffness + 1. / fiberStiffnessProjectedOnTendon);
 }
 
 template<typename W, typename X>
@@ -459,9 +491,9 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
             this->s_.fiberLength, fiberLength, dt);
         const auto tendonForce = Lloyd2003Muscle::calculateTendonForce(
             this->i_.musculotendonLength, fiberLength, this->p_);
-        const auto fiberForce = Lloyd2003Muscle::calculateFiberForce(
+        const auto fiberForceProjectedOnTendon = Lloyd2003Muscle::calculateFiberForceProjectedOnTendon(
             this->i_.activation, fiberLength, fiberVelocity, this->p_);
-        const auto v = tendonForce - fiberForce;
+        const auto v = tendonForce - fiberForceProjectedOnTendon;
         return v;
     };
 
