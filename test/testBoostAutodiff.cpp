@@ -3,7 +3,7 @@
  */
 
 #include <boost/math/differentiation/autodiff.hpp>
-#include <boost/multiprecision/cpp_bin_float.hpp>
+//#include <boost/multiprecision/cpp>
 #include <boost/math/constants/constants.hpp>
 #include <iostream>
 #include <vector>
@@ -36,13 +36,13 @@ bool test1() {
 }
 
 
-/*
+
 template<typename W, typename X, typename Y, typename Z>
 auto f(const W &w, const X &x, const Y &y, const Z &z) {
     using namespace std;
     return exp(w * sin(x * log(y) / z) + sqrt(w * z / (x * y))) + w * w / tan(z);
 }
-
+/*
 bool test2() {
     using float50 = boost::multiprecision::cpp_bin_float_50;
 
@@ -66,7 +66,7 @@ bool test2() {
               << "relative error: " << (v.derivative(Nw, Nx, Ny, Nz) / answer - 1) << '\n';
     return 0;
 }
-
+*/
 
 template<typename X, typename Y>
 auto test_fun(const X& x, const Y& y) {
@@ -76,7 +76,7 @@ auto test_fun(const X& x, const Y& y) {
 
 bool test3() {
     constexpr unsigned Order = 1;// Highest order derivative to be calculated.
-    auto const variables = make_ftuple<double, 2, 2>(2, 2);
+    auto const variables = df::make_ftuple<double, 2, 2>(2, 2);
     auto const &x = std::get<0>(variables);
     auto const &y = std::get<1>(variables);
     auto const z = test_fun(x, y);
@@ -112,13 +112,13 @@ bool test4() {
         const double t{ i * dt * 0.9 };
         auto yp = spline.getFirstDerivative(t);
         // get derivative using autodiff
-        auto const xx = make_fvar<double, 1>(t);
+        auto const xx = df::make_fvar<double, 1>(t);
         auto yy = spline.get(xx);
         failed |= (yy.derivative(1) != yp);
     }
     return failed;
 }
-
+/*
 bool test5() {
     using boost::math::epsilon_difference;
 
@@ -144,7 +144,7 @@ bool test5() {
     bool failed = false;
     for (int n = 0; n < 100; ++n) {
         auto const val = dis(gen);
-        auto const x = make_fvar<double, 1>(val);
+        auto const x = df::make_fvar<double, 1>(val);
         //check the value of the two derivatives is the same, within 2 epsilons 
         bool isEqual = epsilon_difference(fun(x).derivative(1),dfun(val)) < 2.0;
         std::cout << fun(x).derivative(1) << "=?" << dfun(val);
@@ -162,10 +162,10 @@ bool test5() {
 int main() {
     bool failed = false;
     failed |= test1();
-//    failed |= test2();
-//    failed |= test3();
-//    failed |= test4();
-//    failed |= test5();
+   // failed |= test2();
+    failed |= test3();
+    failed |= test4();
+  //  failed |= test5();
 
     return failed;
 }

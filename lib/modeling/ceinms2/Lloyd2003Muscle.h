@@ -50,7 +50,7 @@ class CubicSpline {
             const root_type d2 = getSecondDerivative(static_cast<root_type>(cr));
             const root_type derivatives[3]{ d0, d1, d2 };
             return cr.apply_derivatives(
-                order, [&derivatives](size_t i) { return derivatives[i & 2]; });
+                order, [&derivatives](size_t i) { return derivatives[i]; });
         }
     }
 
