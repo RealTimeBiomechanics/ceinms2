@@ -127,7 +127,7 @@ class Stage {
                 , s(childSocket) {}
             const std::shared_ptr<U> p;
             const Socket s;
-            void operator()(T &child) { connectSocket<U, T>(*p, child, s.getSlot()); }
+            void operator()(T &child) { connectSocket(*p, child, s.getSlot()); }
         };
 
         if (!childSocket.hasSlot()) {
@@ -311,13 +311,15 @@ class NMSmodel {
 
   private:
     std::tuple<Stage<Args>...> stages_;
+    // This can be improved so that the type of the sources is automatically derived from the input
+    // types of computational stages
     std::tuple<Source<Excitation>, Source<MusculotendonLength>, Source<MomentArm>> sources_;
 
     //`T` and `U` are of type `Stage`
     template<typename T,
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, stage_t>::value
-                        && std::is_same<typename U::concept_t, stage_t>::value,
+                             && std::is_same<typename U::concept_t, stage_t>::value,
 
             int> = 0>
     void connectStages() {
@@ -343,7 +345,7 @@ class NMSmodel {
     template<typename T,
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
-                        && std::is_same<typename U::concept_t, stage_t>::value,
+                             && std::is_same<typename U::concept_t, stage_t>::value,
             int> = 0>
     void connectInputToStages() {
         auto parentComponentNames = std::get<Source<T>>(sources_).getNames();
@@ -368,29 +370,28 @@ class NMSmodel {
     template<typename T,
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value
-                        && (std::is_same<typename U::concept_t, component_t>::value
-                        || std::is_same<typename U::concept_t, component_mimo_t>::value),
+                             && (std::is_same<typename U::concept_t, component_t>::value
+                                 || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connectInputToComponent(Socket parent, Socket child) {
-        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
-             << child << std::endl;
+        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name
+                  << "." << child << std::endl;
 
         auto input = std::get<Source<T>>(sources_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, input);
     }
 
-
     //`T` and `U` are either a `component_t` or a `component_mimmo_t`
     template<typename T,
         typename U,
         std::enable_if_t<(std::is_same<typename T::concept_t, component_t>::value
-                        || std::is_same<typename T::concept_t, component_mimo_t>::value)
-                        && (std::is_same<typename U::concept_t, component_t>::value
-                        || std::is_same<typename U::concept_t, component_mimo_t>::value),
+                             || std::is_same<typename T::concept_t, component_mimo_t>::value)
+                             && (std::is_same<typename U::concept_t, component_t>::value
+                                 || std::is_same<typename U::concept_t, component_mimo_t>::value),
             int> = 0>
     void connectComponentToComponent(Socket parent, Socket child) {
-        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name << "."
-             << child << std::endl;
+        std::cout << "Connecting " << T::class_name << "." << parent << " -> " << U::class_name
+                  << "." << child << std::endl;
         auto parentComponent = std::get<Stage<T>>(stages_).getPtr(parent.getName());
         std::get<Stage<U>>(stages_).connectToParent(child, parentComponent);
     }
@@ -399,7 +400,7 @@ class NMSmodel {
         typename U,
         std::enable_if_t<std::is_same<typename T::concept_t, data_t>::value, int> = 0>
     void connect_(Socket parent, Socket child, ...) {
-     //   static_assert(false, "It is not possible to connect to an Input");
+        //   static_assert(false, "It is not possible to connect to an Input");
     }
 };
 

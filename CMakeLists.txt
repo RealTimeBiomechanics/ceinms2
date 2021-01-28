@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
 
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "")
+  message(
+    "Using vcpkg."
+  )
+endif()
+
 # Set the project name to your project name, my project isn't very descriptive
 project(ceinms2 CXX)
 include(cmake/StandardProjectSettings.cmake)
@@ -39,16 +47,16 @@ if (ENABLE_PCH)
   target_precompile_headers(project_options INTERFACE <vector> <string> <map> <utility>)
 endif()
 
+find_package(Boost 1.72 REQUIRED)
 
 if(ENABLE_TESTING)
   enable_testing()
   message(
     "Building Tests."
   )
+  add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
   add_subdirectory(test)
 endif()
-
-add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
 
 add_subdirectory(lib)
 add_subdirectory(src)

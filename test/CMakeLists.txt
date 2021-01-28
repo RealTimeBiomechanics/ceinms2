@@ -1,4 +1,12 @@
 add_executable(testNMSmodel testNMSmodel.cpp)
 target_link_libraries(testNMSmodel modeling project_options project_warnings )
-
 add_test(TestNMSmodel testNMSmodel)
+
+add_executable(testMuscleModels testMuscleModels.cpp)
+target_link_libraries(testMuscleModels modeling project_options project_warnings)
+add_test(TestMuscleModels testMuscleModels)
+
+add_executable(testBoostAutodiff testBoostAutodiff.cpp)
+target_link_libraries(testBoostAutodiff modeling project_options project_warnings)
+target_include_directories(testBoostAutodiff PRIVATE ${Boost_INCLUDE_DIRS})
+add_test(TestBoostAutodiff testBoostAutodiff)

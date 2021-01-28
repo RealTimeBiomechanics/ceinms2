@@ -300,7 +300,7 @@ size_t Curve<mode, T, N>::getAbscissaPoint(double xValue,
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getValue(double xValue) const {
+double constexpr Curve<mode, T, N>::getValue(double xValue) const {
     size_t n = x_.size();
     double yValue(.0);
     if (xValue < x_.at(0)) {
@@ -323,7 +323,7 @@ double Curve<mode, T, N>::getValue(double xValue) const {
  * at that x-value.
  */
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getValue(double xalue,
+double constexpr Curve<mode, T, N>::getValue(double xalue,
     size_t abscissaPoint,
     Int2Type<CurveMode::Cubic>) const {
     const size_t k(abscissaPoint);
@@ -334,7 +334,7 @@ double Curve<mode, T, N>::getValue(double xalue,
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getValue(double xalue,
+double constexpr Curve<mode, T, N>::getValue(double xalue,
     size_t abscissaPoint,
     Int2Type<CurveMode::Linear>) const {
     const unsigned k(abscissaPoint);
@@ -352,8 +352,8 @@ double Curve<mode, T, N>::getValue(double xalue,
     */
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getFirstDerivative(double xValue) const {
-    int n = x_.size();
+double constexpr Curve<mode, T, N>::getFirstDerivative(double xValue) const {
+    size_t n = x_.size();
     double yValue(.0);
     if (n <= 0) return yValue;
     if (xValue < x_.at(0))
@@ -370,10 +370,10 @@ double Curve<mode, T, N>::getFirstDerivative(double xValue) const {
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getFirstDerivative(double xValue,
+double constexpr Curve<mode, T, N>::getFirstDerivative(double xValue,
     size_t abscissaPoint,
     Int2Type<CurveMode::Cubic>) const {
-    unsigned k(abscissaPoint);
+    size_t k(abscissaPoint);
     double dx = xValue - x_.at(k);
     if (nearly_equal(dx, 0.)) return b_.at(k);
     return (b_.at(k) + dx * (2.0 * c_.at(k) + 3.0 * dx * d_.at(k)));
@@ -381,7 +381,7 @@ double Curve<mode, T, N>::getFirstDerivative(double xValue,
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getFirstDerivative(double xValue,
+double constexpr Curve<mode, T, N>::getFirstDerivative(double xValue,
     size_t abscissaPoint,
     Int2Type<CurveMode::Linear>) const {
     return b_.at(abscissaPoint);
@@ -389,8 +389,8 @@ double Curve<mode, T, N>::getFirstDerivative(double xValue,
 
 
 template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
-double Curve<mode, T, N>::getSecondDerivative(double xValue) const {
-    int n = x_.size();
+double constexpr Curve<mode, T, N>::getSecondDerivative(double xValue) const {
+    size_t n = x_.size();
 
 
     // Now see if the abscissa is out of range of the function
@@ -402,15 +402,15 @@ double Curve<mode, T, N>::getSecondDerivative(double xValue) const {
 
     if (n == 1) return 0;
 
-    int k = 0;
+    size_t k = 0;
     if (n == 2)
         k = 0;
     else {
         // Do a binary search to find which two spline control points the
         // abscissa is between
 
-        int i = 0;
-        int j = n;
+        size_t i = 0;
+        size_t j = n;
 
         while (1) {
             k = (i + j) / 2;
