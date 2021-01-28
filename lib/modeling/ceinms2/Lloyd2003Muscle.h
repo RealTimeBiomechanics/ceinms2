@@ -527,7 +527,7 @@ void Lloyd2003Muscle::calculateOutput() {
 void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
     double fLength = s_.fiberLength;
-    double tol = 1e-9;
+    const double tol = 1e-9;
     while (diff > tol) {
         integrate(0.001);
         diff = std::abs(sNew_.fiberLength - fLength);
