@@ -6,7 +6,6 @@
 #include "ceinms2/Types.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/WDBsolver.h"
-#include "ceinms2/ExponentialActivation.h"
 
 namespace ceinms {
 
@@ -551,8 +550,9 @@ void Lloyd2003Muscle::evaluate(DoubleT dt) {
     validateState();
     calculateOutput();
 }
-// This can be made generic when Concepts are available
-void connectSocket(const ExponentialActivation &parent, Lloyd2003Muscle &child) {
+
+template<ActivationGenerator T>
+void connectSocket(const T &parent, Lloyd2003Muscle &child) {
     child.setInput(parent.getOutput<Activation>());
 }
 

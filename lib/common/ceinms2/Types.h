@@ -63,5 +63,10 @@ concept ForceGenerator = requires(T m) {
     m.getOutput().fiberForce;
 };
 
+template<typename T>
+concept ActivationGenerator = requires(T m) {
+    m.getOutput().activation;
+};
+
 }// namespace ceinms
 #endif
