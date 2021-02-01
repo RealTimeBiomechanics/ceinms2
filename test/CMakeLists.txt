@@ -6,6 +6,10 @@ add_executable(testMuscleModels testMuscleModels.cpp)
 target_link_libraries(testMuscleModels modeling project_options project_warnings)
 add_test(TestMuscleModels testMuscleModels)
 
+add_executable(testDof testDof.cpp)
+target_link_libraries(testDof modeling project_options project_warnings)
+add_test(TestDof testDof)
+
 add_executable(testBoostAutodiff testBoostAutodiff.cpp)
 target_link_libraries(testBoostAutodiff modeling project_options project_warnings)
 target_include_directories(testBoostAutodiff PRIVATE ${Boost_INCLUDE_DIRS})

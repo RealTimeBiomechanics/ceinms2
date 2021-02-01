@@ -24,7 +24,7 @@ to be completed
 
 ## CEINMS2 architecture
 
-CEINMS2 architecture is inspired by [OpenSim](https://github.com/opensim-org/opensim-core), but reducing the highly complex hierachical structure of OpenSim's models to the essential. CEINMS2 is designed to be computationally efficient and numerous optimizations happen at compile-time. 
+CEINMS2 architecture is inspired by [OpenSim](https://github.com/opensim-org/opensim-core), but reducing the highly complex hierarchical structure of OpenSim's models to the bare minimum. CEINMS2 is designed to be computationally efficient and numerous optimizations happen at compile-time. 
 
 Architectural requirements:
 * Must be scalable and enable any type and number of subcomponents

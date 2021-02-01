@@ -1,5 +1,6 @@
 #include <ceinms2/Lloyd2003Muscle.h>
 #include <ceinms2/ExponentialActivation.h>
+#include <ceinms2/Dof.h>
 #include <ceinms2/NMSmodel.h>
 #include <iostream>
 
@@ -354,7 +355,7 @@ int testConnections() {
         return 1;
     }
     try {
-        /*Test if conncetion with multi input multi output component
+        /*Test connection with multi input multi output components
          */
         cout << "------------TEST 4------------\n";
         MyNMSmodel model;

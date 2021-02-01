@@ -1,3 +1,4 @@
+#include "ceinms2/Types.h"
 #include "ceinms2/Lloyd2003Muscle.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/DataTable.h"
@@ -13,7 +14,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
-
+using ceinms::DoubleT;
 constexpr double pi = 3.14159265358979323846;
 
 template<typename MuscleT>

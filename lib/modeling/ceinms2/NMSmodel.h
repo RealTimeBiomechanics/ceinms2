@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <memory>
 #include <map>
+#include <algorithm>
 #include "ceinms2/Types.h"
 
 namespace ceinms {
@@ -195,7 +196,7 @@ class Source {
 
     void addInput(std::string name) noexcept {
         names_.emplace_back(name);
-        input_.emplace_back(std::make_shared<T>(0.));
+        input_.emplace_back(std::make_shared<T>());
         ++nInput_;
     }
 
@@ -313,7 +314,7 @@ class NMSmodel {
     std::tuple<Stage<Args>...> stages_;
     // This can be improved so that the type of the sources is automatically derived from the input
     // types of computational stages
-    std::tuple<Source<Excitation>, Source<MusculotendonLength>, Source<MomentArm>> sources_;
+    std::tuple<Source<Excitation>, Source<Activation>, Source<MusculotendonLength>, Source<MomentArmsOnDof>> sources_;
 
     //`T` and `U` are of type `Stage`
     template<typename T,
