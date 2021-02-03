@@ -2,6 +2,7 @@
 #define ceinms2_LinearActuator_h
 #include <ceinms2/Types.h>
 #include <string_view>
+#include <string>
 
 namespace ceinms {
 
@@ -59,7 +60,7 @@ class LinearActuator {
 
 template<ActivationGenerator T>
 void connectSocket(const T &parent, LinearActuator &child) {
-    child.setInput(parent.getOutput<Activation>());
+    child.setActivation(parent.getOutput().activation);
 }
 
 void connectSocket(const Activation &parent, LinearActuator &child) {

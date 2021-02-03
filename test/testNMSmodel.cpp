@@ -2,7 +2,7 @@
 #include <ceinms2/ExponentialActivation.h>
 #include <ceinms2/Dof.h>
 #include <ceinms2/NMSmodel.h>
-#include <ceinms2/TestingUtilities.h>
+#include <ceinms2/testingUtilities.h>
 #include <iostream>
 
 using namespace std;

@@ -555,7 +555,7 @@ void Lloyd2003Muscle::evaluate(DoubleT dt) {
 
 template<ActivationGenerator T>
 void connectSocket(const T &parent, Lloyd2003Muscle &child) {
-    child.setInput(parent.getOutput<Activation>());
+    child.setActivation(parent.getOutput().activation);
 }
 
 void connectSocket(const Activation &parent, Lloyd2003Muscle &child) {

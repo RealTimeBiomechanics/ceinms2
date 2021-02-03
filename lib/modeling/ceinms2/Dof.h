@@ -111,7 +111,7 @@ void Dof::calculateOutput() {
 
 template<ForceGenerator F>
  void connectSocket(const F &parent, Dof &child, size_t childSlot) {
-    child.setInput(parent.getOutput<Force>(), childSlot);
+    child.setInput(parent.getOutput().force, childSlot);
 }
 
  void connectSocket(const MomentArmsOnDof &parent, Dof &child) {
