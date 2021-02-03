@@ -247,7 +247,7 @@ class Source {
 template<typename InT, typename OutT>
 class MultiInputMultiOutput {
   private:
-    std::function<std::vector<OutT>(const std::vector<InT> &)> fun_{([](const std::vector<OutT> &) { return std::vector<InT>{}; })};
+    std::function<std::vector<OutT>(const std::vector<InT> &)> fun_{([](const std::vector<InT> &) { return std::vector<OutT>{}; })};
     size_t nInput_{0}, nOutput_{0};
     //consider having these input_ and output_ as shared_ptr, same as 
     // per `Source`
