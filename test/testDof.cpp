@@ -1,6 +1,7 @@
 #include <ceinms2/NMSmodel.h>
 #include <ceinms2/Dof.h>
 #include <ceinms2/Lloyd2003Muscle.h>
+#include <ceinms2/LinearActuator.h>
 #include <iostream>
 
 using namespace ceinms;
@@ -21,9 +22,9 @@ auto getDefaultMuscle() {
 }
 
 int testDofConnection() {
-    using MyNMSmodel = NMSmodel<Lloyd2003Muscle, Dof>;
+    using MyNMSmodel = NMSmodel<LinearActuator, Dof>;
     MyNMSmodel model;
-    ceinms::Lloyd2003Muscle muscle(getDefaultMuscle());
+    ceinms::LinearActuator muscle;
     muscle.setName("mtu1");
     model.addComponent(muscle);
     muscle.setName("mtu2");
@@ -34,9 +35,6 @@ int testDofConnection() {
     model.addInput<Activation>("mtu1");
     model.addInput<Activation>("mtu2");
     model.addInput<Activation>("mtu3");
-    model.addInput<MusculotendonLength>("mtu1");
-    model.addInput<MusculotendonLength>("mtu2");
-    model.addInput<MusculotendonLength>("mtu3");
 
     ceinms::Dof dof({ 3 });
     dof.setName("dof1");
@@ -44,21 +42,19 @@ int testDofConnection() {
 
     model.addInput<MomentArmsOnDof>("dof1");
 
-    model.connect<Activation, Lloyd2003Muscle>();
-    model.connect<MusculotendonLength, Lloyd2003Muscle>();
-    model.connect<Lloyd2003Muscle, Dof>(Socket("mtu1"), Socket{ "dof1", 0 });
-    model.connect<Lloyd2003Muscle, Dof>(Socket("mtu2"), Socket{ "dof1", 1 });
-    model.connect<Lloyd2003Muscle, Dof>(Socket("mtu3"), Socket{ "dof1", 2 });
+    model.connect<Activation, LinearActuator>();
+    model.connect<LinearActuator, Dof>(Socket("mtu1"), Socket{ "dof1", 0 });
+    model.connect<LinearActuator, Dof>(Socket("mtu2"), Socket{ "dof1", 1 });
+    model.connect<LinearActuator, Dof>(Socket("mtu3"), Socket{ "dof1", 2 });
 
     model.connect<MomentArmsOnDof, Dof>();
 
-
-    model.setInput(vector{ Activation{ 1. }, Activation{ 1. }, Activation{ 1. } });
-    model.setInput(
-        vector{ MusculotendonLength{ 2. }, MusculotendonLength{ 2. }, MusculotendonLength{ 2. } });
+    model.setInput(vector<Activation>{ 1.,  1., 1. });
     model.setInput(vector{ MomentArmsOnDof{ { 1., 1., 1. } } });
     model.evaluate(0.01);
-    std::cout << model.getComponent<Dof>("dof1").getOutput<Torque>().get() << std::endl;
+    std::cout << model.getComponent<LinearActuator>("mtu1").getOutput<Force>() << std::endl;
+
+    std::cout << model.getComponent<Dof>("dof1").getOutput<Torque>() << std::endl;
     return 0;
 }
 

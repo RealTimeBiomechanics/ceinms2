@@ -10,6 +10,10 @@ add_executable(testDof testDof.cpp)
 target_link_libraries(testDof modeling project_options project_warnings)
 add_test(TestDof testDof)
 
+add_executable(testLinearActuator testLinearActuator.cpp)
+target_link_libraries(testLinearActuator modeling project_options project_warnings)
+add_test(TestLinearActuator testLinearActuator)
+
 add_executable(testBoostAutodiff testBoostAutodiff.cpp)
 target_link_libraries(testBoostAutodiff modeling project_options project_warnings)
 target_include_directories(testBoostAutodiff PRIVATE ${Boost_INCLUDE_DIRS})

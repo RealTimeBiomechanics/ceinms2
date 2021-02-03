@@ -205,11 +205,11 @@ int testConnectionFlow() {
         model.addInput<MusculotendonLength>("muscle1b");
 
         model.connect<Excitation, ExcitationBypass>();
-        model.connect<ExcitationBypass, ActivationBypass>("muscle1"s, "muscle1a"s);
-        model.connect<ExcitationBypass, ActivationBypass>("muscle1"s, "muscle1b"s);
+        model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1a");
+        model.connect<ExcitationBypass, ActivationBypass>("muscle1", "muscle1b");
         model.connect<MusculotendonLength, MTLBypass>();
-        model.setInput(vector{ Excitation{ 1 } });
-        model.setInput(vector{ MusculotendonLength{ 1.1 }, MusculotendonLength{ 3.1 } });
+        model.setInput(vector<Excitation>{ 1 });
+        model.setInput(vector<MusculotendonLength>{ 1.1, 3.1 } );
         model.evaluate(0.1);
         auto out1 = model.getOutput<ActivationBypass>();
         if (out1.at(0).getPrimary() != 12 && out1.at(1).getPrimary())
@@ -251,14 +251,14 @@ int testConnectionFlow() {
         model.setInput(vector{ Excitation{ 1 }, Excitation{ 2 } });
         model.evaluate(0.1);
         auto out1 = model.getComponent<MIMO>("mimo").getOutput();
-        std::cout << out1.at(0).get() << " should be 11\n";
-        std::cout << out1.at(1).get() << " should be 21\n";
-        std::cout << out1.at(2).get() << " should be 31\n";
-        std::cout << out1.at(3).get() << " should be 42\n";
-        if (out1.at(0).get() != 11 
-            && out1.at(1).get() != 21 
-            && out1.at(2).get() != 31
-            && out1.at(3).get() != 42)
+        std::cout << out1.at(0) << " should be 11\n";
+        std::cout << out1.at(1) << " should be 21\n";
+        std::cout << out1.at(2) << " should be 31\n";
+        std::cout << out1.at(3) << " should be 42\n";
+        if (out1.at(0) != 11 
+            && out1.at(1) != 21 
+            && out1.at(2) != 31
+            && out1.at(3) != 42)
             throw std::logic_error("Wrong connection flow\n");
 
     } catch (const std::exception &e) {

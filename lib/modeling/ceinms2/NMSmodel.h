@@ -64,16 +64,17 @@ void connectSocket(const T &, U &, ...) {
 
 class Socket {
   public:
-    Socket(const std::string &name)
+    Socket(const std::string& name)
         : name_(name) {}
-    Socket(const std::string &name, size_t slot)
+    Socket(const std::string& name, size_t slot)
         : name_(name)
         , slot_(slot)
         , hasSlot_(true) {}
-    Socket(char name[])
+    Socket(const char* name)
         : Socket(std::string(name)) {}
-    Socket(char name[], size_t slot)
-        : Socket(std::string(name), slot){}
+    Socket(const char *name, size_t slot)
+        : Socket(std::string(name), slot) {}
+
     [[nodiscard]] std::string getName() const { return name_; }
     [[nodiscard]] size_t getSlot() const { return slot_; }
     [[nodiscard]] bool hasSlot() const { return hasSlot_; }

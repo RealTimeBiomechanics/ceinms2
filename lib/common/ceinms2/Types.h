@@ -44,10 +44,11 @@ class Data {
     using type = DataType;
     static constexpr std::string_view class_name{getDataTypeName<U>() };
     Data() = default;
-    explicit Data(T val)
+    Data(T val)
         : value_(val) {}
     [[nodiscard]] T &get() { return value_; }
     [[nodiscard]] const T &get() const { return value_; }
+    operator T() const { return get(); }
 };
 using Excitation = Data<DataType::Excitation>;
 using MusculotendonLength = Data<DataType::MusculotendonLength>;
@@ -60,7 +61,7 @@ using Torque = Data<DataType::Torque>;
 
 template<typename T>
 concept ForceGenerator = requires(T m) {
-    m.getOutput().fiberForce;
+    m.getOutput().force;
 };
 
 template<typename T>

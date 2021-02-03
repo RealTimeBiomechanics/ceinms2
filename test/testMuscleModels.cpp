@@ -29,7 +29,7 @@ void printStep(MuscleT &muscle) {
         muscle.setMusculotendonLength(mtuLStart);
         muscle.evaluate(0.001);
         outF << muscle.getOutput().fiberForce << ", "
-             << muscle.getOutput().normalisedFiberLength << endl;
+             << muscle.getOutput().normalizedFiberLength << endl;
     }
 
     for (int i{ 0 }; i < 100; ++i) {
@@ -37,7 +37,7 @@ void printStep(MuscleT &muscle) {
         muscle.setMusculotendonLength(mtuLStop);
         muscle.evaluate(0.001);
         outF << muscle.getOutput().fiberForce << ", "
-             << muscle.getOutput().normalisedFiberLength << endl;
+             << muscle.getOutput().normalizedFiberLength << endl;
     }
 }
 
@@ -119,12 +119,12 @@ bool runMillardBenchmark() {
         { "force_trial5.dat", 1.0 },
         { "force_trial6.dat", 2.0 },
     };
-    auto normalisedDisplacementDataTable =
+    auto normalizedDisplacementDataTable =
         fillFromCSV<double>((dataPath / "displacement.dat").string(), '\t', 15);
-    auto normalisedDisplacement =
-        normalisedDisplacementDataTable.getColumn("displacement_mm");
-    auto times = normalisedDisplacementDataTable.getTimeColumn();
-    ceinms::Curve<ceinms::CurveMode::Offline> displacementCurve{ times, normalisedDisplacement };
+    auto normalizedDisplacement =
+        normalizedDisplacementDataTable.getColumn("displacement_mm");
+    auto times = normalizedDisplacementDataTable.getTimeColumn();
+    ceinms::Curve<ceinms::CurveMode::Offline> displacementCurve{ times, normalizedDisplacement };
 
     auto squareError = [](double a, double b) {
         double e = a - b;
