@@ -1,5 +1,5 @@
 # ceinms2
-![Build Status](https://travis-ci.org/RealTimeBiomechanics/ceinms2.svg?branch=muscle-stiffness)
+![Build Status](https://travis-ci.org/RealTimeBiomechanics/ceinms2.svg?branch=master)
 
 CEINMS2 is a software library implementing a modular and computationally efficient neuromusculoskeletal model. 
 
