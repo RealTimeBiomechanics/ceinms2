@@ -274,7 +274,7 @@ template<CurveMode::Mode mode, CurveMode::Interpolation T, size_t N>
 size_t Curve<mode, T, N>::getAbscissaPoint(double xValue,
     Int2Type<CurveMode::Online>) const {
     size_t i = 0;
-    const size_t j = x_.size();
+    size_t j = x_.size();
     size_t k = 0;
     while (1) {
         k = (i + j) / 2;

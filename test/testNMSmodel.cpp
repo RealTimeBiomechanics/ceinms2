@@ -2,6 +2,7 @@
 #include <ceinms2/ExponentialActivation.h>
 #include <ceinms2/Dof.h>
 #include <ceinms2/NMSmodel.h>
+#include <ceinms2/TestingUtilities.h>
 #include <iostream>
 
 using namespace std;
@@ -410,17 +411,6 @@ int testConcepts() {
         is_same<typename MultiInputMultiOutput<Excitation, MusculotendonLength>::concept_t,
             component_mimo_t>::value);
     return 0;
-}
-
-template<typename T>
-bool runTest(T testFun, string name) {
-    bool failed = testFun();
-    cout << name << ": ";
-    if (failed)
-        cout << "FAILED\n";
-    else
-        cout << "PASSED\n";
-    return failed;
 }
 
 int main() {

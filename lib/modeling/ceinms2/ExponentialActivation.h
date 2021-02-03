@@ -50,11 +50,11 @@ class ExponentialActivation {
     void setState(State state);
     // From input and current state calculate the new state of the system
     void integrate(DoubleT dt);
+    // from the temporary internal state of the system and the input, calculate all the
+    // output; This is done on the temporary state so we can probe different input wihtout affecting the state
+    void calculateOutput();
     // The temporary state calculated via `integrate` becomes the new state
     void validateState();
-    // from the internal state of the system and the input, calculate all the
-    // output;
-    void calculateOutput();
 
     [[nodiscard]] std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
@@ -104,14 +104,14 @@ void ExponentialActivation::validateState() {
 }
 
 void ExponentialActivation::calculateOutput() {
-    o_.activation = p_.scalefactor * (std::exp(p_.shapefactor * s_.neuralActivationT1) - 1)
+    o_.activation = p_.scalefactor * (std::exp(p_.shapefactor * sNew_.neuralActivationT1) - 1)
                     / (expShapefactor_ - 1);
 }
 
 void ExponentialActivation::evaluate(DoubleT dt) {
     integrate(dt);
-    validateState();
     calculateOutput();
+    validateState();
 }
 
 void ExponentialActivation::updateCoefficients() {

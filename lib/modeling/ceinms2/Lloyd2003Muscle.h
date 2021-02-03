@@ -504,10 +504,10 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
 
 void Lloyd2003Muscle::calculateOutput() {
     o_.normalizedFiberLengthAtT =
-        calculateNormalizedFiberLengthAtT(i_.activation, s_.fiberLength, p_);
-    o_.normalizedFiberLength = calculateNormalizedFiberLength(s_.fiberLength, p_);
-    o_.normalizedFiberVelocity = calculateNormalizedFiberVelocity(s_.fiberVelocity, p_);
-    o_.pennationAngle = calculatePennationAngle(s_.fiberLength, p_);
+        calculateNormalizedFiberLengthAtT(i_.activation, sNew_.fiberLength, p_);
+    o_.normalizedFiberLength = calculateNormalizedFiberLength(sNew_.fiberLength, p_);
+    o_.normalizedFiberVelocity = calculateNormalizedFiberVelocity(sNew_.fiberVelocity, p_);
+    o_.pennationAngle = calculatePennationAngle(sNew_.fiberLength, p_);
     o_.fa = p_.activeForceLengthCurve.get(o_.normalizedFiberLengthAtT);
     o_.fp = p_.passiveForceLengthCurve.get(o_.normalizedFiberLength);
     o_.fv = p_.forceVelocityCurve.get(o_.normalizedFiberVelocity);
@@ -515,15 +515,15 @@ void Lloyd2003Muscle::calculateOutput() {
     o_.passiveForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fp;
     o_.dampingForce =
         p_.maxIsometricForce * p_.strengthCoefficient * p_.damping * o_.normalizedFiberVelocity;
-    o_.fiberForce = calculateFiberForce(i_.activation, s_.fiberLength, s_.fiberVelocity, p_);
+    o_.fiberForce = calculateFiberForce(i_.activation, sNew_.fiberLength, sNew_.fiberVelocity, p_);
     o_.force = o_.fiberForce;
-    o_.tendonStrain = calculateTendonStrain(i_.musculotendonLength, s_.fiberLength, p_);
-    o_.tendonLength = calculateTendonLength(i_.musculotendonLength, s_.fiberLength, p_);
-    o_.tendonForce = calculateTendonForce(i_.musculotendonLength, s_.fiberLength, p_);
+    o_.tendonStrain = calculateTendonStrain(i_.musculotendonLength, sNew_.fiberLength, p_);
+    o_.tendonLength = calculateTendonLength(i_.musculotendonLength, sNew_.fiberLength, p_);
+    o_.tendonForce = calculateTendonForce(i_.musculotendonLength, sNew_.fiberLength, p_);
     o_.musculotendonStiffness = calculateMusculotendonStiffness(
-        i_.activation, i_.musculotendonLength, s_.fiberLength, s_.fiberVelocity, p_);
-    o_.fiberStiffness = calculateFiberStiffness(i_.activation, s_.fiberLength, s_.fiberVelocity, p_);
-    o_.tendonStiffness = calculateTendonStiffness(i_.musculotendonLength, s_.fiberLength, p_);
+        i_.activation, i_.musculotendonLength, sNew_.fiberLength, sNew_.fiberVelocity, p_);
+    o_.fiberStiffness = calculateFiberStiffness(i_.activation, sNew_.fiberLength, sNew_.fiberVelocity, p_);
+    o_.tendonStiffness = calculateTendonStiffness(i_.musculotendonLength, sNew_.fiberLength, p_);
 }
 void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
@@ -549,8 +549,8 @@ void Lloyd2003Muscle::validateState() {
 
 void Lloyd2003Muscle::evaluate(DoubleT dt) {
     integrate(dt);
-    validateState();
     calculateOutput();
+    validateState();
 }
 
 template<ActivationGenerator T>

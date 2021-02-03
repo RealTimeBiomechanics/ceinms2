@@ -2,6 +2,7 @@
 #include <ceinms2/Dof.h>
 #include <ceinms2/Lloyd2003Muscle.h>
 #include <ceinms2/LinearActuator.h>
+#include <ceinms2/TestingUtilities.h>
 #include <iostream>
 
 using namespace ceinms;
@@ -21,7 +22,7 @@ auto getDefaultMuscle() {
     return muscle;
 }
 
-int testDofConnection() {
+int testDofConnectionWithNMSmodel() {
     using MyNMSmodel = NMSmodel<LinearActuator, Dof>;
     MyNMSmodel model;
     ceinms::LinearActuator muscle;
@@ -52,10 +53,9 @@ int testDofConnection() {
     model.setInput(vector<Activation>{ 1.,  1., 1. });
     model.setInput(vector{ MomentArmsOnDof{ { 1., 1., 1. } } });
     model.evaluate(0.01);
-    std::cout << model.getComponent<LinearActuator>("mtu1").getOutput<Force>() << std::endl;
 
-    std::cout << model.getComponent<Dof>("dof1").getOutput<Torque>() << std::endl;
-    return 0;
+    return !(model.getComponent<Dof>("dof1").getOutput<Torque>() == 3.);
+ 
 }
 
 int testDof() {
@@ -66,19 +66,19 @@ int testDof() {
     d.setForces(forces);
     d.setMomentArms(momentArms);
     d.calculateOutput();
-    std::cout << d.getOutput<Torque>().get() << std::endl;
+    std::cout << d.getOutput<Torque>() << std::endl;
 
     d.setInput(std::vector{ Force{ 1. }, Force{ 2. }, Force{ 3. } });
     d.setInput(std::vector{ MomentArm{ 2. }, MomentArm{ 2. / 2. }, MomentArm{ 2. / 3. } });
     d.calculateOutput();
-    std::cout << d.getOutput<Torque>().get() << std::endl;
+    std::cout << d.getOutput<Torque>() << std::endl;
 
     return 0;
 }
 
 int main() {
-    testDof();
-    testDofConnection();
-
-    return 0;
+    bool failed = false;
+    failed |= runTest(&testDof, "Compile test");
+    failed |= runTest(&testDofConnectionWithNMSmodel, "Works within NMS model");
+    return failed;
 }

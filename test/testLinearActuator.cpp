@@ -7,7 +7,8 @@ int main() {
     actuator.getParameters().maximumForce = 100;
     actuator.setActivation(0.5);
     actuator.evaluate(0.1);
-    std::cout << actuator.getOutput<ceinms::Force>().get() << std::endl;
+    
+    std::cout << actuator.getOutput<ceinms::Force>() << " should be 50" << std::endl;
 
     ceinms::NMSmodel<ceinms::LinearActuator> model;
     actuator.setName("mtu1");
