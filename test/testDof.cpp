@@ -2,7 +2,7 @@
 #include <ceinms2/Dof.h>
 #include <ceinms2/Lloyd2003Muscle.h>
 #include <ceinms2/LinearActuator.h>
-#include <ceinms2/TestingUtilities.h>
+#include <ceinms2/testingUtilities.h>
 #include <iostream>
 
 using namespace ceinms;

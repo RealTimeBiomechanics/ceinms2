@@ -2,6 +2,7 @@
 #include "ceinms2/Lloyd2003Muscle.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/DataTable.h"
+#include "ceinms2/testingUtilities.h"
 #include <cmath>
 #include <vector>
 #include <fstream>
@@ -167,6 +168,6 @@ bool runMillardBenchmark() {
 }
 
 int main() {
-    bool failed = runMillardBenchmark<ceinms::Lloyd2003Muscle>();
+    bool failed = ceinms::runTest(&runMillardBenchmark<ceinms::Lloyd2003Muscle>, "Lloyd2003Muscle comparison with literature");
     return failed;
 }

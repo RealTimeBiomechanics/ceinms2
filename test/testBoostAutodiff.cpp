@@ -9,7 +9,7 @@
 #include <vector>
 #include <tuple>
 #include <random>
-
+#include "ceinms2/testingUtilities.h"
 #include "ceinms2/Lloyd2003Muscle.h"
 
 namespace df = boost::math::differentiation;
@@ -161,10 +161,10 @@ bool test5() {
 
 int main() {
     bool failed = false;
-    failed |= test1();
+    failed |= ceinms::runTest(&test1, "Fifith order derivative");
    // failed |= test2();
-    failed |= test3();
-    failed |= test4();
+    failed |= ceinms::runTest(&test3, "Derivative extraction");
+    failed |= ceinms::runTest(&test4, "Cubic Spine and autodiff");
   //  failed |= test5();
 
     return failed;

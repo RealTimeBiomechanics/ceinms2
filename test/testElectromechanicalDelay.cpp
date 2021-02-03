@@ -1,5 +1,5 @@
 #include <ceinms2/ElectromechanicalDelay.h>
-#include <ceinms2/TestingUtilities.h>
+#include <ceinms2/testingUtilities.h>
 #include <cmath>
 #include <vector>
 #include <iostream>
