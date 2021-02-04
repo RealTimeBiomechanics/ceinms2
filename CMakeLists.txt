@@ -48,7 +48,7 @@ if (ENABLE_PCH)
 endif()
 
 find_package(Boost 1.72 REQUIRED)
-
+find_package(Eigen3 REQUIRED)
 if(ENABLE_TESTING)
   enable_testing()
   message(

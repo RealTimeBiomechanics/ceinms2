@@ -9,7 +9,7 @@ class ElectromechanicalDelay {
   public:
     using type = nullptr_t;
     using concept_t = component_t;
-
+    static constexpr std::string_view class_name = "ElectromechanicalDelay";
     struct Parameters {
         DoubleT delay{ 0. };
     };

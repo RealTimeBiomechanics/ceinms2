@@ -44,7 +44,7 @@ install:
     ./bootstrap-vcpkg.sh
     # Only build release libs to save time. We inject a new line first since some cmake files don't end with one.
     echo -e '\nset(VCPKG_BUILD_TYPE release)' >> ./triplets/${VCPKG_TRIPLET}.cmake
-    ./vcpkg install boost-math
+    ./vcpkg install boost-math eigen3
     popd
 
 script:
