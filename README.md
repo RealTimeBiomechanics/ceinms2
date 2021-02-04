@@ -1,8 +1,6 @@
 # ceinms2
-
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0dc038f806e54ed6a04cd4838feed0dd)](https://app.codacy.com/gh/RealTimeBiomechanics/ceinms2?utm_source=github.com&utm_medium=referral&utm_content=RealTimeBiomechanics/ceinms2&utm_campaign=Badge_Grade)
-
 ![Build Status](https://travis-ci.org/RealTimeBiomechanics/ceinms2.svg?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0dc038f806e54ed6a04cd4838feed0dd)](https://app.codacy.com/gh/RealTimeBiomechanics/ceinms2?utm_source=github.com&utm_medium=referral&utm_content=RealTimeBiomechanics/ceinms2&utm_campaign=Badge_Grade)
 
 CEINMS2 is a software library implementing a modular and computationally efficient neuromusculoskeletal model. 
 
@@ -17,7 +15,7 @@ CEINMS2 uses Micorsoft's VCPKG as package manage and to install dependencies and
 After installing VCPKG, create an environment variable called `VCPKG_ROOT` pointing to the install directory of vcpkg, this will enable CMake to automatically find all the packages installed on your system using VCPKG. 
 
 Install boost libraries
-```
+```sh
 ./vcpkg install boost-math:x64-windows
 ```
 
