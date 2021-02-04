@@ -1,4 +1,7 @@
 # ceinms2
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0dc038f806e54ed6a04cd4838feed0dd)](https://app.codacy.com/gh/RealTimeBiomechanics/ceinms2?utm_source=github.com&utm_medium=referral&utm_content=RealTimeBiomechanics/ceinms2&utm_campaign=Badge_Grade)
+
 ![Build Status](https://travis-ci.org/RealTimeBiomechanics/ceinms2.svg?branch=master)
 
 CEINMS2 is a software library implementing a modular and computationally efficient neuromusculoskeletal model. 
