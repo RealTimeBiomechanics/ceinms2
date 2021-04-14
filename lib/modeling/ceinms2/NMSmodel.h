@@ -103,12 +103,37 @@ class Stage {
     /*Makes an internal copy of `component`*/
     void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
 
-    void evaluate(DoubleT dt) noexcept {
+    void executeConnections() noexcept {
         for (const auto &c : components_) {
             for (auto &f : connections_[c->getName()]) {
                 f(*c);
             }
+        }
+    }
+
+    void evaluate(DoubleT dt) noexcept {
+        executeConnections();
+        for (const auto &c : components_) {
             c->evaluate(dt);
+        }
+    }
+
+    void integrate(DoubleT dt) noexcept {
+        for (const auto &c : components_) {
+            c->integrate(dt);
+            c->calculateOutput();
+        }
+    }
+
+    void calculateOutput() noexcept {
+        for (const auto &c : components_) {
+            c->calculateOutput();
+        }
+    }
+
+    void validateState() noexcept {
+        for (const auto &c : components_) {
+            c->validateState();
         }
     }
 
@@ -309,7 +334,33 @@ class NMSmodel {
     template<typename T>
     [[nodiscard]] auto &getComponent(std::string name);
 
+    template<typename T>
+    [[nodiscard]] auto getNames() const noexcept;
+
+    template<typename T>
+    void executeConnections() noexcept;
+
+    void executeConnections() noexcept;
+
+    template<typename T>
     void evaluate(DoubleT dt) noexcept;
+
+    void evaluate(DoubleT dt) noexcept;
+
+    template<typename T>
+    void integrate(DoubleT dt) noexcept;
+
+    void integrate(DoubleT dt) noexcept;
+
+    template<typename T>
+    void calculateOutput() noexcept;
+
+    void calculateOutput() noexcept;
+
+    template<typename T>
+    void validateState() noexcept;
+
+    void validateState() noexcept;
 
   private:
     std::tuple<Stage<Args>...> stages_;
@@ -450,11 +501,67 @@ void NMSmodel<Args...>::connect() {
     }
 }
 
+// Evaluate all the `Stage`s in the order in which they were defined
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
+    std::get<Stage<T>>(stages_).evaluate(dt);
+}
+
+// Components read input data
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::executeConnections() noexcept {
+    std::get<Stage<T>>(stages_).executeConnections();
+}
+
+
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::integrate(DoubleT dt) noexcept {
+    std::get<Stage<T>>(stages_).integrate(dt);
+}
+
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::calculateOutput() noexcept {
+    std::get<Stage<T>>(stages_).calculateOutput();
+}
+
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::validateState() noexcept {
+    std::get<Stage<T>>(stages_).validateState();
+}
+
+
+
 //Evaluate all the `Stage`s in the order in which they were defined
 template<typename... Args>
 void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
     std::apply([dt](auto &&... args) { (args.evaluate(dt), ...); }, stages_);
+}
 
+//Components read input data
+template<typename... Args>
+void NMSmodel<Args...>::executeConnections() noexcept {
+    std::apply([](auto &&... args) { (args.executeConnections(), ...); }, stages_);
+}
+
+
+template<typename... Args>
+void NMSmodel<Args...>::integrate(DoubleT dt) noexcept {
+    std::apply([dt](auto &&... args) { (args.integrate(dt), ...); }, stages_);
+}
+
+template<typename... Args>
+void NMSmodel<Args...>::calculateOutput() noexcept {
+    std::apply([](auto &&... args) { (args.calculateOutput(), ...); }, stages_);
+}
+
+template<typename... Args>
+void NMSmodel<Args...>::validateState() noexcept {
+    std::apply([](auto &&... args) { (args.validateState(), ...); }, stages_);
 }
 
 template<typename... Args>
@@ -475,6 +582,11 @@ auto &NMSmodel<Args...>::getComponent(std::string name) {
     return std::get<Stage<Component>>(stages_).get(name);
 }
 
+template<typename... Args>
+template<typename Component>
+auto NMSmodel<Args...>::getNames() const noexcept{
+    return std::get<Stage<Component>>(stages_).getNames();
+}
 
 }// namespace ceinms
 
