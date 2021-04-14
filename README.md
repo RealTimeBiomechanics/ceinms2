@@ -30,7 +30,6 @@ CEINMS2 architecture is inspired by [OpenSim](https://github.com/opensim-org/ope
 Architectural requirements:
 * Must be scalable and enable any type and number of subcomponents
 * Must not restrict the user to a predefined set of input
-* Must be computationally efficient
 * Must be thread safe
 * Should avoid run time polymorphism
 * Should be computationally efficient
