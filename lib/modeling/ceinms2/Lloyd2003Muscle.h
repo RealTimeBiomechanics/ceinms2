@@ -516,7 +516,8 @@ void Lloyd2003Muscle::calculateOutput() {
     o_.dampingForce =
         p_.maxIsometricForce * p_.strengthCoefficient * p_.damping * o_.normalizedFiberVelocity;
     o_.fiberForce = calculateFiberForce(i_.activation, sNew_.fiberLength, sNew_.fiberVelocity, p_);
-    o_.force = o_.fiberForce;
+    o_.force = calculateFiberForceProjectedOnTendon(
+        i_.activation, sNew_.fiberLength, sNew_.fiberVelocity, p_);
     o_.tendonStrain = calculateTendonStrain(i_.musculotendonLength, sNew_.fiberLength, p_);
     o_.tendonLength = calculateTendonLength(i_.musculotendonLength, sNew_.fiberLength, p_);
     o_.tendonForce = calculateTendonForce(i_.musculotendonLength, sNew_.fiberLength, p_);
@@ -525,6 +526,7 @@ void Lloyd2003Muscle::calculateOutput() {
     o_.fiberStiffness = calculateFiberStiffness(i_.activation, sNew_.fiberLength, sNew_.fiberVelocity, p_);
     o_.tendonStiffness = calculateTendonStiffness(i_.musculotendonLength, sNew_.fiberLength, p_);
 }
+
 void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
     double fLength = s_.fiberLength;

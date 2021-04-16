@@ -1,5 +1,6 @@
 #include "ceinms2/Lloyd2003Muscle.h"
 #include "ceinms2/DataTable.h"
+#include "ceinms2/RienerActivation.h"
 #include <iostream>
 #include <vector>
 #include <string>
