@@ -6,6 +6,7 @@
 #include "ceinms2/Types.h"
 #include "ceinms2/Curve.h"
 #include "ceinms2/WDBsolver.h"
+#include <Eigen/Dense>
 
 namespace ceinms {
 
@@ -243,6 +244,7 @@ class Lloyd2003Muscle {
     [[nodiscard]] DoubleT calculateTendonStrain() const;
     [[nodiscard]] DoubleT calculateTendonLength() const;
     [[nodiscard]] DoubleT calculateTendonForce() const;
+    [[nodiscard]] auto calculateJacobian() const;
   private:
 
      template<typename I0,
@@ -588,6 +590,8 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
         return v;
     };
 
+
+
     const auto currentFiberLength = wdbSolve(f, minFiberLength, maxFiberLength, 1e-9);
     return currentFiberLength;
 }
@@ -744,6 +748,97 @@ DoubleT Lloyd2003Muscle::calculateTendonStiffness() const {
                                 * p_.tendonForceStrainCurve.getFirstDerivative(tendonStrain) };
     return tendonStiffness;
 }
+
+auto Lloyd2003Muscle::calculateJacobian() const {
+    constexpr int N = 2;
+    using boost::math::differentiation::make_ftuple;
+    const auto variables =
+        make_ftuple<DoubleT, N, N, N, N, N, N, N, N, N, N>(
+            i_.musculotendonLength,
+            i_.activation,
+            p_.damping,
+            p_.maxContractionVelocity,
+            p_.maxIsometricForce,
+            p_.optimalFiberLength,
+            p_.pennationAngleAtOptimalFiberLength,
+            p_.percentageChange,
+            p_.strengthCoefficient,
+            p_.tendonSlackLength);
+
+    const auto &fMusculotendonLength = std::get<0>(variables);
+    const auto &fActivation = std::get<1>(variables);
+    const auto &fDamping = std::get<2>(variables);
+    const auto &fMaxContractionVelocity = std::get<3>(variables);
+    const auto &fMaxIsometricForce = std::get<4>(variables);
+    const auto &fOptimalFiberLength = std::get<5>(variables);
+    const auto &fPennationAngleAtOptimalFiberLength = std::get<6>(variables);
+    const auto &fPercentageChange = std::get<7>(variables);
+    const auto &fStrengthCoefficient = std::get<8>(variables);
+    const auto &fTendonSlackLength = std::get<9>(variables);
+
+    auto force =
+        [this](const auto &aMusculotendonLength,
+            const auto &aActivation,
+            const auto &aFiberVelocity,
+            const auto &aDamping,
+            const auto &aMaxContractionVelocity,
+            const auto &aMaxIsometricForce,
+            const auto &aOptimalFiberLength,
+            const auto &aPennationAngleAtOptimalFiberLength,
+            const auto &aPercentageChange,
+            const auto &aStrengthCoefficient,
+            const auto &aTendonSlackLength) {
+
+
+            const auto first = aOptimalFiberLength * sin(aPennationAngleAtOptimalFiberLength);
+            const auto second = aMusculotendonLength - aTendonSlackLength;
+            const auto aNewFiberLength = sqrt(first * first + second * second);
+
+            // using fNewFiberLength we now have the calculation of the muscle force as function of
+            // the musculotendon length, without having to do integration, which cannot work with
+            // automatic differentiation
+            const auto aForce = calculateFiberForceProjectedOnTendon(
+                aActivation,
+                aNewFiberLength,
+                aFiberVelocity,
+                aOptimalFiberLength,
+                aPennationAngleAtOptimalFiberLength,
+                aMaxIsometricForce,
+                aStrengthCoefficient,
+                aDamping,
+                aPercentageChange,
+                aMaxContractionVelocity,
+                p_.activeForceLengthCurve,
+                p_.passiveForceLengthCurve,
+                p_.forceVelocityCurve);
+
+            return aForce;
+        }(fMusculotendonLength,
+            fActivation,
+            sNew_.fiberVelocity,
+            fDamping,
+            fMaxContractionVelocity,
+            fMaxIsometricForce,
+            fOptimalFiberLength,
+            fPennationAngleAtOptimalFiberLength,
+            fPercentageChange,
+            fStrengthCoefficient,
+            fTendonSlackLength);
+
+    Eigen::Matrix<DoubleT, 1, 10> J;
+    J(0) = force.at(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    J(1) = force.at(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+    J(2) = force.at(0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+    J(3) = force.at(0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+    J(4) = force.at(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+    J(5) = force.at(0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+    J(6) = force.at(0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+    J(7) = force.at(0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+    J(8) = force.at(0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+    J(9) = force.at(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+    return J;
+}
+
 
 void Lloyd2003Muscle::equilibrate() {
     double diff = 1;
