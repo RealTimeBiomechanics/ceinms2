@@ -42,6 +42,8 @@ auto f(const W &w, const X &x, const Y &y, const Z &z) {
     using namespace std;
     return exp(w * sin(x * log(y) / z) + sqrt(w * z / (x * y))) + w * w / tan(z);
 }
+
+
 /*
 bool test2() {
     using float50 = boost::multiprecision::cpp_bin_float_50;
