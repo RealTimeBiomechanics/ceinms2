@@ -401,7 +401,7 @@ constexpr auto Lloyd2003Muscle::calculateFiberForceProjectedOnTendon(const I0 &a
     const CubicSpline &passiveForceLengthCurve,
     const CubicSpline &forceVelocityCurve) {
 
-    const decltype(fiberLength) pennationAngle{ calculatePennationAngle(
+    const  auto pennationAngle{ calculatePennationAngle(
         fiberLength, optimalFiberLength, pennationAngleAtOptimalFiberLength) };
       return calculateFiberForce(activation,
                  fiberLength,
@@ -451,7 +451,7 @@ constexpr auto Lloyd2003Muscle::calculateFiberForce(const I0 &activation,
     const auto fiberForce{ maxIsometricForce * strengthCoefficient
                            * (fa * fv * activation + fp + damping * normalizedFiberVelocity) };
     // clamp muscle force
-    if (fiberForce < 0.) return decltype(fiberForce){ 0. };
+    if (fiberForce < 0.) return .0 * fiberForce;
     return fiberForce;
 }
 
@@ -460,8 +460,8 @@ constexpr auto Lloyd2003Muscle::calculatePennationAngle(const S0 &fiberLength,
     const P0 &optimalFiberLength,
     const P1 &pennationAngleAtOptimalFiberLength) {
     const auto value{ optimalFiberLength * sin(pennationAngleAtOptimalFiberLength) / fiberLength };
-    if (value < 0) { return decltype(value){ asin(0) }; }
-    if (value > 0.99) { return decltype(value){ asin(0.99) }; }
+    if (value < 0) { return  asin(.0 *value); }
+    if (value > 0.99) { return asin(.0*value + 0.99); }
     return asin(value);
 }
 
@@ -501,8 +501,8 @@ constexpr auto Lloyd2003Muscle::calculateNormalizedFiberVelocity(const S0 &fiber
     P1 &maxContractionVelocity) {
     auto normalizedFiberVelocity =
         fiberVelocity / (optimalFiberLength * maxContractionVelocity);
-    if (normalizedFiberVelocity > 1) { normalizedFiberVelocity = 1; }
-    if (normalizedFiberVelocity < -1) { normalizedFiberVelocity = -1; }
+    if (normalizedFiberVelocity > 1) { return 0. * normalizedFiberVelocity + 1; }
+    if (normalizedFiberVelocity < -1) { return 0. * normalizedFiberVelocity - 1; }
     return normalizedFiberVelocity;
 }
 
@@ -512,10 +512,9 @@ constexpr auto Lloyd2003Muscle::calculateTendonLength(const I0 &musculotendonLen
     const P0 &optimalFiberLength,
     const P1 &pennationAngleAtOptimalFiberLength) {
     return musculotendonLength
-                                  - fiberLength
-                                        * cos(calculatePennationAngle(fiberLength,
-                                            optimalFiberLength,
-                                            pennationAngleAtOptimalFiberLength));
+           - fiberLength
+                 * cos(calculatePennationAngle(
+                     fiberLength, optimalFiberLength, pennationAngleAtOptimalFiberLength));
 }
 
 
@@ -532,7 +531,7 @@ constexpr auto Lloyd2003Muscle::calculateTendonStrain(
                              pennationAngleAtOptimalFiberLength)
                             - tendonSlackLength)
                         / tendonSlackLength;
-    if (tendonStrain < 0.) { tendonStrain = 0; }
+    if (tendonStrain < 0.) { return 0. * tendonStrain; }
     return tendonStrain;
 }
 
@@ -750,7 +749,7 @@ DoubleT Lloyd2003Muscle::calculateTendonStiffness() const {
 }
 
 auto Lloyd2003Muscle::calculateJacobian() const {
-    constexpr int N = 2;
+    constexpr int N = 1;
     using boost::math::differentiation::make_ftuple;
     const auto variables =
         make_ftuple<DoubleT, N, N, N, N, N, N, N, N, N, N>(
@@ -777,7 +776,7 @@ auto Lloyd2003Muscle::calculateJacobian() const {
     const auto &fTendonSlackLength = std::get<9>(variables);
 
     auto force =
-        [this](const auto &aMusculotendonLength,
+        [](const auto &aMusculotendonLength,
             const auto &aActivation,
             const auto &aFiberVelocity,
             const auto &aDamping,
@@ -787,7 +786,10 @@ auto Lloyd2003Muscle::calculateJacobian() const {
             const auto &aPennationAngleAtOptimalFiberLength,
             const auto &aPercentageChange,
             const auto &aStrengthCoefficient,
-            const auto &aTendonSlackLength) {
+            const auto &aTendonSlackLength,
+            const CubicSpline &aActiveForceLengthCurve,
+            const CubicSpline &aPassiveForceLengthCurve,
+            const CubicSpline &aForceVelocityCurve) {
 
 
             const auto first = aOptimalFiberLength * sin(aPennationAngleAtOptimalFiberLength);
@@ -808,9 +810,9 @@ auto Lloyd2003Muscle::calculateJacobian() const {
                 aDamping,
                 aPercentageChange,
                 aMaxContractionVelocity,
-                p_.activeForceLengthCurve,
-                p_.passiveForceLengthCurve,
-                p_.forceVelocityCurve);
+                aActiveForceLengthCurve,
+                aPassiveForceLengthCurve,
+                aForceVelocityCurve);
 
             return aForce;
         }(fMusculotendonLength,
@@ -823,7 +825,11 @@ auto Lloyd2003Muscle::calculateJacobian() const {
             fPennationAngleAtOptimalFiberLength,
             fPercentageChange,
             fStrengthCoefficient,
-            fTendonSlackLength);
+            fTendonSlackLength,
+            p_.activeForceLengthCurve,
+            p_.passiveForceLengthCurve,
+            p_.forceVelocityCurve
+            );
 
     Eigen::Matrix<DoubleT, 1, 10> J;
     J(0) = force.at(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);

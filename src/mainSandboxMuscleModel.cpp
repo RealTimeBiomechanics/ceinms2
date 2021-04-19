@@ -95,8 +95,9 @@ int test2() {
         mtu.evaluate(0.005);
         mtu.calculateOutput();
         auto J = mtu.calculateJacobian();
-        std::cout << J << std::endl;
+  //      std::cout << J << std::endl;
     }
+    return 0;
 }
 
 int main() {
