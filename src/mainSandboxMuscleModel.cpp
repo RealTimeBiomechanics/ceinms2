@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <limits>
+#include <chrono>
 using namespace ceinms;
 using std::string;
 
@@ -61,6 +63,43 @@ int test1() {
     return 0;
 }
 
+auto calculateJacobianWithCentralDifferences(Lloyd2003Muscle mtu) {
+    auto param = mtu.getParameters();
+    auto input = mtu.getInput();
+    std::vector<DoubleT*> w(10);
+    w[0] = &input.musculotendonLength;
+    w[1] = &input.activation;
+    w[2] = &param.damping;
+    w[3] = &param.maxContractionVelocity;
+    w[4] = &param.maxIsometricForce;
+    w[5] = &param.optimalFiberLength;
+    w[6] = &param.pennationAngleAtOptimalFiberLength;
+    w[7] = &param.percentageChange;
+    w[8] = &param.strengthCoefficient;
+    w[9] = &param.tendonSlackLength;
+  
+    auto calculateForce{
+        [](Lloyd2003Muscle &mtu, Lloyd2003Muscle::Input i, Lloyd2003Muscle::Parameters p) {
+            mtu.setInput(i);
+            mtu.setParameters(p);
+            mtu.integrate(0.005);
+            return mtu.calculateFiberForceProjectedOnTendon();
+        }
+    };
+    Eigen::Matrix<DoubleT, 1, 10> J;
+    DoubleT eps = std::numeric_limits<DoubleT>::epsilon()*10.;
+    for (int i{ 0 }; i < w.size(); ++i) {
+        DoubleT center = *w[i];
+        *w[i] = center + eps;
+        DoubleT fUp = calculateForce(mtu, input, param);
+        *w[i] = center - eps;
+        DoubleT fDown = calculateForce(mtu, input, param);
+        J(i) = (fUp - fDown) / (2 * eps);
+    }
+    return J;
+}
+
+
 int test2() {
     const CubicSpline act{ ceinms::getDefaultActiveForceLengthCurve() };
     const CubicSpline pas(ceinms::getDefaultPassiveForceLengthCurve());
@@ -88,6 +127,8 @@ int test2() {
     vector<double> activation = data.getColumn("activation");
     vector<double> mtuLength = data.getColumn("mtuLength");
     vector<double> mtuStiffness, fiberStiffness, tendonStiffness;
+    vector<Eigen::Matrix<DoubleT, 1, 10>> Jautos, Jnumerics;
+
     mtu.equilibrate();
     for (int i{ 0 }; i < activation.size(); ++i) {
         mtu.setActivation(activation.at(i));
@@ -95,8 +136,23 @@ int test2() {
         mtu.evaluate(0.005);
         mtu.calculateOutput();
         auto J = mtu.calculateJacobian();
-  //      std::cout << J << std::endl;
+        Jautos.push_back(J);
+        auto J1 = calculateJacobianWithCentralDifferences(mtu);
+        Jnumerics.push_back(J1);
     }
+    
+    auto print { [](vector<Eigen::Matrix<DoubleT, 1, 10>> &jac, std::string filename) {
+        std::ofstream outF(filename);
+        for (auto &j : jac) {
+            for (int i{ 0 }; i < j.size(); ++i)
+                outF << j(i) << ", ";
+            outF << '\n';
+        }
+    }};
+
+    print(Jnumerics, "numericJ.csv");
+    print(Jautos, "autoJ.csv");
+
     return 0;
 }
 

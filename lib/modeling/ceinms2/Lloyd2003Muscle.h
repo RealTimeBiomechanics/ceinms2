@@ -205,9 +205,11 @@ class Lloyd2003Muscle {
     void setMusculotendonLength(DoubleT musculotendonLength);
     void setInput(Activation value);
     void setInput(MusculotendonLength value);
-
+    void setInput(Input input) { i_ = input; }
+    void setParameters(Parameters parameters) { p_ = parameters; }
     void equilibrate();
     void setState(State state);
+    
     // From input and current state calculate the new state of the system
     void integrate(DoubleT dt);
     // The temporary state calculated via `integrate` becomes the new state
@@ -223,6 +225,8 @@ class Lloyd2003Muscle {
 
     [[nodiscard]] Parameters &getParameters() { return p_; }
     [[nodiscard]] const Parameters& getParameters() const { return p_; }
+    [[nodiscard]] Input &getInput() { return i_; }
+    [[nodiscard]] const Input &getInput() const { return i_; }
     [[nodiscard]] const State &getState() const { return s_; }
     [[nodiscard]] State &getState() { return s_; }
     [[nodiscard]] const Output &getOutput() const { return o_; }
