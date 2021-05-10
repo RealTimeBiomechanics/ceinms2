@@ -5,7 +5,7 @@ set(modeling_HEADERS ceinms2/Lloyd2003Muscle.h
 					 ceinms2/NMSmodel.h
 					 ceinms2/Dof.h
 					 ceinms2/ElectromechanicalDelay.h
-					 ceinms2/RienerActivation.h
+	#				 ceinms2/RienerActivation.h
 					)
 set(modeling_TEMPLATE_IMPLEMENTATION
 					)

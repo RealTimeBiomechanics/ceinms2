@@ -96,13 +96,7 @@ class Stage {
   private:
     std::vector<std::shared_ptr<T>> components_;
     std::map<std::string, std::vector<std::function<void(T&)>>> connections_;
-
-  public:
-    using type = T;
-    using concept_t = stage_t;
-    /*Makes an internal copy of `component`*/
-    void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
-
+   
     void executeConnections() noexcept {
         for (const auto &c : components_) {
             for (auto &f : connections_[c->getName()]) {
@@ -110,6 +104,12 @@ class Stage {
             }
         }
     }
+
+  public:
+    using type = T;
+    using concept_t = stage_t;
+    /*Makes an internal copy of `component`*/
+    void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
 
     void evaluate(DoubleT dt) noexcept {
         executeConnections();
@@ -119,14 +119,9 @@ class Stage {
     }
 
     void integrate(DoubleT dt) noexcept {
+        executeConnections();
         for (const auto &c : components_) {
             c->integrate(dt);
-            c->calculateOutput();
-        }
-    }
-
-    void calculateOutput() noexcept {
-        for (const auto &c : components_) {
             c->calculateOutput();
         }
     }
@@ -329,6 +324,13 @@ class NMSmodel {
     void setInput(const std::vector<T> &inputVector);
 
     template<typename T>
+    [[nodiscard]] const auto &getInput(std::string name) const;
+
+    template<typename T>
+    [[nodiscard]] auto &getInput(std::string name);
+
+
+    template<typename T>
     [[nodiscard]] const auto &getComponent(std::string name) const;
 
     template<typename T>
@@ -338,11 +340,6 @@ class NMSmodel {
     [[nodiscard]] auto getNames() const noexcept;
 
     template<typename T>
-    void executeConnections() noexcept;
-
-    void executeConnections() noexcept;
-
-    template<typename T>
     void evaluate(DoubleT dt) noexcept;
 
     void evaluate(DoubleT dt) noexcept;
@@ -351,11 +348,6 @@ class NMSmodel {
     void integrate(DoubleT dt) noexcept;
 
     void integrate(DoubleT dt) noexcept;
-
-    template<typename T>
-    void calculateOutput() noexcept;
-
-    void calculateOutput() noexcept;
 
     template<typename T>
     void validateState() noexcept;
@@ -508,24 +500,10 @@ void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
     std::get<Stage<T>>(stages_).evaluate(dt);
 }
 
-// Components read input data
-template<typename... Args>
-template<typename T>
-void NMSmodel<Args...>::executeConnections() noexcept {
-    std::get<Stage<T>>(stages_).executeConnections();
-}
-
-
 template<typename... Args>
 template<typename T>
 void NMSmodel<Args...>::integrate(DoubleT dt) noexcept {
     std::get<Stage<T>>(stages_).integrate(dt);
-}
-
-template<typename... Args>
-template<typename T>
-void NMSmodel<Args...>::calculateOutput() noexcept {
-    std::get<Stage<T>>(stages_).calculateOutput();
 }
 
 template<typename... Args>
@@ -542,21 +520,9 @@ void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
     std::apply([dt](auto &&... args) { (args.evaluate(dt), ...); }, stages_);
 }
 
-//Components read input data
-template<typename... Args>
-void NMSmodel<Args...>::executeConnections() noexcept {
-    std::apply([](auto &&... args) { (args.executeConnections(), ...); }, stages_);
-}
-
-
 template<typename... Args>
 void NMSmodel<Args...>::integrate(DoubleT dt) noexcept {
     std::apply([dt](auto &&... args) { (args.integrate(dt), ...); }, stages_);
-}
-
-template<typename... Args>
-void NMSmodel<Args...>::calculateOutput() noexcept {
-    std::apply([](auto &&... args) { (args.calculateOutput(), ...); }, stages_);
 }
 
 template<typename... Args>
@@ -587,6 +553,20 @@ template<typename Component>
 auto NMSmodel<Args...>::getNames() const noexcept{
     return std::get<Stage<Component>>(stages_).getNames();
 }
+
+template<typename... Args>
+template<typename Input>
+const auto &NMSmodel<Args...>::getInput(std::string name) const {
+    return std::get<Source<Input>>(sources_).get(name);
+}
+
+template<typename... Args>
+template<typename Input>
+auto &NMSmodel<Args...>::getInput(std::string name) {
+    return std::get<Source<Input>>(sources_).get(name);
+}
+
+
 
 }// namespace ceinms
 

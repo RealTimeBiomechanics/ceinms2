@@ -601,13 +601,14 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
 
 void Lloyd2003Muscle::calculateOutput() {
     o_.normalizedFiberLengthAtT = calculateNormalizedFiberLengthAtT();
+ 
     o_.normalizedFiberLength = calculateNormalizedFiberLength();
     o_.normalizedFiberVelocity = calculateNormalizedFiberVelocity();
     o_.pennationAngle = calculatePennationAngle();
     o_.fa = p_.activeForceLengthCurve.get(o_.normalizedFiberLengthAtT);
     o_.fp = p_.passiveForceLengthCurve.get(o_.normalizedFiberLength);
     o_.fv = p_.forceVelocityCurve.get(o_.normalizedFiberVelocity);
-    o_.activeForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fa * o_.fv;
+    o_.activeForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fa * o_.fv * i_.activation;
     o_.passiveForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fp;
     o_.dampingForce =
         p_.maxIsometricForce * p_.strengthCoefficient * p_.damping * o_.normalizedFiberVelocity;
@@ -851,15 +852,11 @@ auto Lloyd2003Muscle::calculateJacobian() const {
 
 
 void Lloyd2003Muscle::equilibrate() {
-    double diff = 1;
-    double fLength = s_.fiberLength;
     const double tol = 1e-9;
-    while (diff > tol) {
+    do {
         integrate(0.001);
-        diff = std::abs(sNew_.fiberLength - fLength);
-        fLength = sNew_.fiberLength;
-    }
-    validateState();
+        validateState();
+    } while (sNew_.fiberVelocity > tol);
 }
 
 void Lloyd2003Muscle::integrate(DoubleT dt) {

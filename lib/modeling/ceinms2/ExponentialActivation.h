@@ -64,7 +64,8 @@ class ExponentialActivation {
     State &updState() { return s_; }
     [[nodiscard]] State getState() const { return s_; }
     [[nodiscard]] Output getOutput() const { return o_; }
-
+    [[nodiscard]] Input &getInput() { return i_; }
+    [[nodiscard]] const Input &getInput() const { return i_; }
     template<typename T, std::enable_if_t<std::is_same<T, Activation>::value, int> = 0>
     [[nodiscard]] Activation getOutput() const {
         return Activation{ o_.activation };

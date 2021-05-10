@@ -54,7 +54,8 @@ class Dof {
     void calculateOutput();
 
     [[nodiscard]] const Output &getOutput() const { return o_; }
-
+    [[nodiscard]] Input &getInput() { return i_; }
+    [[nodiscard]] const Input &getInput() const { return i_; }
     template<typename T, std::enable_if_t<std::is_same<T, Torque>::value, int> = 0>
     [[nodiscard]] Torque getOutput() const { return Torque{ o_.torque }; }
 
