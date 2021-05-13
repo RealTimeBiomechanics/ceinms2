@@ -85,11 +85,7 @@ class Socket {
     bool hasSlot_{ false };
 };
 
-std::ostream &operator<<(std::ostream &os, const Socket &sock) {
-    os << sock.getName();
-    if (sock.hasSlot()) { os << "." << sock.getSlot(); }
-    return os;
-}
+std::ostream &operator<<(std::ostream &os, const Socket &sock);
 
 template<typename T>
 class Stage {

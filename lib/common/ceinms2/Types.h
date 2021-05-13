@@ -69,5 +69,11 @@ concept ActivationGenerator = requires(T m) {
     m.getOutput().activation;
 };
 
+
+template<typename T>
+concept ExcitationGenerator = requires(T m) {
+    m.getOutput().excitation;
+};
+
 }// namespace ceinms
 #endif

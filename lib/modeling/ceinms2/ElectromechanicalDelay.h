@@ -88,10 +88,7 @@ class ElectromechanicalDelay {
     std::string name_;
 };
 
-void connectSocket(const Excitation &parent, ElectromechanicalDelay &child) {
-    child.setInput(parent);
-}
-
+void connectSocket(const Excitation &parent, ElectromechanicalDelay &child);
 }// namespace ceinms
 
 #endif

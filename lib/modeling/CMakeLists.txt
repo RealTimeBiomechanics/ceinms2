@@ -10,7 +10,13 @@ set(modeling_HEADERS ceinms2/Lloyd2003Muscle.h
 set(modeling_TEMPLATE_IMPLEMENTATION
 					)
 set(modeling_SOURCES
-                    modeling.cpp)
+                    modeling.cpp
+					Dof.cpp
+					Lloyd2003Muscle.cpp
+					ElectromechanicalDelay.cpp
+					LinearActuator.cpp
+					ExponentialActivation.cpp
+					NMSmodel.cpp)
 set_source_files_properties( ${modeling_TEMPLATE_IMPLEMENTATION} PROPERTIES HEADER_FILE_ONLY TRUE)
 source_group("Header Files" FILES ${modeling_HEADERS})
 source_group("Source Files" FILES ${modeling_TEMPLATE_IMPLEMENTATION})
@@ -21,7 +27,7 @@ set(modeling_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "Include 
 
 add_library(modeling STATIC ${modeling_HEADERS} ${modeling_TEMPLATE_IMPLEMENTATION} ${modeling_SOURCES})
 set_target_properties(modeling PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(modeling PUBLIC common)
+target_link_libraries(modeling PUBLIC common project_options)
 target_include_directories(modeling PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
                                         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> ${Boost_INCLUDE_DIRS})
 

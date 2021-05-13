@@ -63,9 +63,7 @@ void connectSocket(const T &parent, LinearActuator &child) {
     child.setActivation(parent.getOutput().activation);
 }
 
-void connectSocket(const Activation &parent, LinearActuator &child) {
-    child.setInput(parent);
-}
+void connectSocket(const Activation &parent, LinearActuator &child);
 
 }
 
