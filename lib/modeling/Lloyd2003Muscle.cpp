@@ -135,26 +135,28 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
 }
 
 void Lloyd2003Muscle::calculateOutput() {
-    o_.normalizedFiberLengthAtT = calculateNormalizedFiberLengthAtT();
-
-    o_.normalizedFiberLength = calculateNormalizedFiberLength();
-    o_.normalizedFiberVelocity = calculateNormalizedFiberVelocity();
-    o_.pennationAngle = calculatePennationAngle();
-    o_.fa = p_.activeForceLengthCurve.get(o_.normalizedFiberLengthAtT);
-    o_.fp = p_.passiveForceLengthCurve.get(o_.normalizedFiberLength);
-    o_.fv = p_.forceVelocityCurve.get(o_.normalizedFiberVelocity);
-    o_.activeForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fa * o_.fv * i_.activation;
-    o_.passiveForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fp;
-    o_.dampingForce =
-        p_.maxIsometricForce * p_.strengthCoefficient * p_.damping * o_.normalizedFiberVelocity;
-    o_.fiberForce = calculateFiberForce();
     o_.force = calculateFiberForceProjectedOnTendon();
-    o_.tendonStrain = calculateTendonStrain();
-    o_.tendonLength = calculateTendonLength();
-    o_.tendonForce = calculateTendonForce();
-    o_.musculotendonStiffness = calculateMusculotendonStiffness();
-    o_.fiberStiffness = calculateFiberStiffness();
-    o_.tendonStiffness = calculateTendonStiffness();
+    if (properties_.doCalculateSecondaryOutput) {
+        o_.normalizedFiberLengthAtT = calculateNormalizedFiberLengthAtT();
+        o_.normalizedFiberLength = calculateNormalizedFiberLength();
+        o_.normalizedFiberVelocity = calculateNormalizedFiberVelocity();
+        o_.pennationAngle = calculatePennationAngle();
+        o_.fa = p_.activeForceLengthCurve.get(o_.normalizedFiberLengthAtT);
+        o_.fp = p_.passiveForceLengthCurve.get(o_.normalizedFiberLength);
+        o_.fv = p_.forceVelocityCurve.get(o_.normalizedFiberVelocity);
+        o_.activeForce =
+            p_.maxIsometricForce * p_.strengthCoefficient * o_.fa * o_.fv * i_.activation;
+        o_.passiveForce = p_.maxIsometricForce * p_.strengthCoefficient * o_.fp;
+        o_.dampingForce =
+            p_.maxIsometricForce * p_.strengthCoefficient * p_.damping * o_.normalizedFiberVelocity;
+        o_.fiberForce = calculateFiberForce();
+        o_.tendonStrain = calculateTendonStrain();
+        o_.tendonLength = calculateTendonLength();
+        o_.tendonForce = calculateTendonForce();
+        o_.musculotendonStiffness = calculateMusculotendonStiffness();
+        o_.fiberStiffness = calculateFiberStiffness();
+        o_.tendonStiffness = calculateTendonStiffness();
+    }
 }
 
 DoubleT Lloyd2003Muscle::calculateNormalizedFiberLengthAtT() const {

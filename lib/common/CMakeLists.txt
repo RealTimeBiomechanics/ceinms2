@@ -1,13 +1,14 @@
 set(common_HEADERS 	ceinms2/Curve.h
 					ceinms2/CircularVector.h
 					ceinms2/DataTable.h
-					ceinms2/Types.h)
+					ceinms2/Types.h
+					ceinms2/Mapper.h)
 set(common_TEMPLATE_IMPLEMENTATION
 					ceinms2/Curve.cpp
 					ceinms2/CircularVector.cpp
 					ceinms2/DataTable.cpp)
 set(common_SOURCES
-                    common.cpp)
+                    common.cpp Mapper.cpp)
 
 set_source_files_properties(${common_TEMPLATE_IMPLEMENTATION} PROPERTIES HEADER_FILE_ONLY TRUE)
 source_group("Header Files" FILES ${common_HEADERS})

@@ -128,6 +128,11 @@ class Lloyd2003Muscle {
         DoubleT fp{ 0. };
     };
 
+    struct Properties {
+        bool doUseStiffTendon = false;
+        bool doCalculateSecondaryOutput = true;
+    };
+
     Lloyd2003Muscle(Parameters parameters)
         : p_(parameters) {
         s_.fiberLength = p_.optimalFiberLength;
@@ -162,6 +167,8 @@ class Lloyd2003Muscle {
     [[nodiscard]] const Input &getInput() const { return i_; }
     [[nodiscard]] const State &getState() const { return s_; }
     [[nodiscard]] State &getState() { return s_; }
+    [[nodiscard]] const Properties &getProperties() const { return properties_; }
+    [[nodiscard]] Properties &getProperties() { return properties_; }
     [[nodiscard]] const Output &getOutput() const { return o_; }
     template<typename T, std::enable_if_t<std::is_same<T, Force>::value, int> = 0>
     [[nodiscard]] Force getOutput() const {
@@ -291,6 +298,7 @@ class Lloyd2003Muscle {
     State s_, sNew_;
     Input i_;
     Output o_;
+    Properties properties_;
 };
 
 

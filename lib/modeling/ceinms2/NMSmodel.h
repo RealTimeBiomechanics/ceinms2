@@ -8,7 +8,7 @@
 #include <functional>
 #include <type_traits>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include "ceinms2/Types.h"
 
@@ -91,8 +91,14 @@ template<typename T>
 class Stage {
   private:
     std::vector<std::shared_ptr<T>> components_;
-    std::map<std::string, std::vector<std::function<void(T&)>>> connections_;
-   
+    std::unordered_map<std::string, std::vector<std::function<void(T&)>>> connections_;
+
+  public:
+    using type = T;
+    using concept_t = stage_t;
+    /*Makes an internal copy of `component`*/
+    void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
+ 
     void executeConnections() noexcept {
         for (const auto &c : components_) {
             for (auto &f : connections_[c->getName()]) {
@@ -100,12 +106,6 @@ class Stage {
             }
         }
     }
-
-  public:
-    using type = T;
-    using concept_t = stage_t;
-    /*Makes an internal copy of `component`*/
-    void addComponent(const T &component) noexcept { components_.emplace_back(new T(component)); }
 
     void evaluate(DoubleT dt) noexcept {
         executeConnections();
@@ -155,6 +155,7 @@ class Stage {
                 std::function<void(T&)>(CommandWithSlot(parent, childSocket)));
         }
     }
+
 
     [[nodiscard]] const T &get(std::string name) const {
         auto idx{ getIndex(name) };
@@ -336,6 +337,9 @@ class NMSmodel {
     [[nodiscard]] auto getNames() const noexcept;
 
     template<typename T>
+    void executeConnections() noexcept;
+
+    template<typename T>
     void evaluate(DoubleT dt) noexcept;
 
     void evaluate(DoubleT dt) noexcept;
@@ -489,7 +493,12 @@ void NMSmodel<Args...>::connect() {
     }
 }
 
-// Evaluate all the `Stage`s in the order in which they were defined
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::executeConnections() noexcept {
+    std::get<Stage<T>>(stages_).executeConnections();
+}
+
 template<typename... Args>
 template<typename T>
 void NMSmodel<Args...>::evaluate(DoubleT dt) noexcept {
