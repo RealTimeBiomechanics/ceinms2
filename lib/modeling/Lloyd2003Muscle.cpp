@@ -288,7 +288,7 @@ DoubleT Lloyd2003Muscle::calculateTendonStiffness() const {
     return tendonStiffness;
 }
 
-auto Lloyd2003Muscle::calculateJacobian() const {
+Eigen::Matrix<DoubleT, 1, 10> Lloyd2003Muscle::calculateJacobian() const {
     constexpr int N = 1;
     using boost::math::differentiation::make_ftuple;
     const auto variables =
