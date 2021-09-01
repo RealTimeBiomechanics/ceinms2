@@ -49,12 +49,12 @@ endif()
 
 find_package(Boost 1.72 REQUIRED)
 find_package(Eigen3 REQUIRED)
+add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
 if(ENABLE_TESTING)
   enable_testing()
   message(
     "Building Tests."
   )
-  add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
   add_subdirectory(test)
 endif()
 
