@@ -188,7 +188,7 @@ class Lloyd2003Muscle {
     [[nodiscard]] DoubleT calculateTendonStrain() const;
     [[nodiscard]] DoubleT calculateTendonLength() const;
     [[nodiscard]] DoubleT calculateTendonForce() const;
-    [[nodiscard]] auto calculateJacobian() const;
+    [[nodiscard]] Eigen::Matrix<DoubleT, 1, 10> calculateJacobian() const;
   private:
 
      template<typename I0,
