@@ -283,7 +283,7 @@ int test3() {
         if (step == 0) mtu.equilibrate();
         mtu.evaluate(0.005);
         mtu.calculateOutput();
-        auto force = mtu.getOutput<Force>();
+        auto force = mtu.getOutput().force;
         auto Jac = mtu.calculateJacobian();
         G(0) = (force - reference.at(step)) * Jac(8);
  //       for (int k{0}; k < 8; ++k)

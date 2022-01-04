@@ -5,6 +5,7 @@ set(modeling_HEADERS ceinms2/Lloyd2003Muscle.h
 					 ceinms2/NMSmodel.h
 					 ceinms2/Dof.h
 					 ceinms2/ElectromechanicalDelay.h
+					 ceinms2/Mileusnic2006MuscleSpindle.h
 	#				 ceinms2/RienerActivation.h
 					)
 set(modeling_TEMPLATE_IMPLEMENTATION
@@ -16,6 +17,7 @@ set(modeling_SOURCES
 					ElectromechanicalDelay.cpp
 					LinearActuator.cpp
 					ExponentialActivation.cpp
+					Mileusnic2006MuscleSpindle.cpp
 					NMSmodel.cpp)
 set_source_files_properties( ${modeling_TEMPLATE_IMPLEMENTATION} PROPERTIES HEADER_FILE_ONLY TRUE)
 source_group("Header Files" FILES ${modeling_HEADERS})
