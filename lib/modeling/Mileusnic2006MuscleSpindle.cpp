@@ -23,12 +23,14 @@ void Mileusnic2006IntrafusalFiber::setInput(Activation fStatic, Activation fDyna
 void Mileusnic2006IntrafusalFiber::setInput(Input input) {
     i_ = input;
 }
-
+/*
 DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
-    DoubleT minPolarRegionLength = 0.;
-    DoubleT maxPolarRegionLength = 1.;
+    DoubleT minPolarRegionLength = p_.polarRegionRestLength;
+    DoubleT maxPolarRegionLength = i_.normalisedMuscleFiberLength;
 
     auto f = [&](double polarRegionLength) -> double {
+        polarRegionLength =
+            std::clamp(polarRegionLength, minPolarRegionLength, maxPolarRegionLength);
         const auto polarRegionVelocity =
             Mileusnic2006IntrafusalFiber::calculatePolarRegionVelocityFromPolarRegionLength(
                 this->s_.polarRegionLength, polarRegionLength, dt);
@@ -59,11 +61,20 @@ DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
         return err;
     };
 
+    if (i_.normalisedMuscleFiberLength < p_.polarRegionRestLength) return p_.polarRegionRestLength;
     const auto currentLengthPolarRegion =
         wdbSolve(f, minPolarRegionLength, maxPolarRegionLength, 1e-9);
     return currentLengthPolarRegion;
 }
+*/
 
+DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
+ 
+    const DoubleT polarRegionLength = i_.normalisedMuscleFiberLength - p_.sensoryRegionRestLength;
+    return std::clamp(polarRegionLength, p_.polarRegionRestLength, i_.normalisedMuscleFiberLength);
+
+}
+    
 void Mileusnic2006IntrafusalFiber::integrate(DoubleT dt) {
     sNew_.polarRegionLength = integratePolarRegionLength(dt);
     sNew_.polarRegionVelocity = calculatePolarRegionVelocityFromPolarRegionLength(
@@ -75,7 +86,7 @@ void Mileusnic2006IntrafusalFiber::equilibrate() {
     do {
         integrate(0.001);
         validateState();
-    } while (sNew_.polarRegionVelocity > tol);
+    } while (std::abs(sNew_.polarRegionVelocity) > tol);
 }
 
 void Mileusnic2006IntrafusalFiber::validateState() {
@@ -95,8 +106,10 @@ DoubleT Mileusnic2006IntrafusalFiber::calculateVelocityContributionToPolarRegion
     DoubleT coefficientOfAsymmetry,
     DoubleT muscleFascicleSlackLength,
     DoubleT velocityPowerTerm) {
-    return beta * coefficientOfAsymmetry * (polarRegionLength - muscleFascicleSlackLength)
-           * std::signbit(polarRegionVelocity)
+
+    double sign = 1.;
+    if (std::signbit(polarRegionVelocity)) sign = -1.;
+    return beta * coefficientOfAsymmetry * (polarRegionLength - muscleFascicleSlackLength) * sign
            * std::pow(std::abs(polarRegionVelocity), velocityPowerTerm);
 }
 
@@ -132,20 +145,16 @@ DoubleT Mileusnic2006IntrafusalFiber::calculateGamma(DoubleT fDynamic,
 }
 
 DoubleT Mileusnic2006IntrafusalFiber::calculatePrimaryAfferent() const {
-    auto const tension = calculateSensoryRegionForce(i_.normalisedMuscleFiberLength,
-        sNew_.polarRegionLength,
-        p_.sensoryRegionStiffness,
-        p_.sensoryRegionRestLength);
-    return p_.sensoryRegionStretchToPrimaryAfferentFiring
+    auto const tension = calculateFiberTension();
+    const DoubleT afferentFiring =  p_.sensoryRegionStretchToPrimaryAfferentFiring
            * (tension / p_.sensoryRegionStiffness
                - (p_.sensoryRegionThresholdLength - p_.sensoryRegionRestLength));
+    if (afferentFiring < 0) return 0.;
+    return afferentFiring;
 }
 
 DoubleT Mileusnic2006IntrafusalFiber::calculateSecondaryAfferent() const {
-    auto const tension = calculateSensoryRegionForce(i_.normalisedMuscleFiberLength,
-        sNew_.polarRegionLength,
-        p_.sensoryRegionStiffness,
-        p_.sensoryRegionRestLength);
+    auto const tension = calculateFiberTension();
     const auto primaryAfferent = calculatePrimaryAfferent();
     const auto term1 = p_.percentageSecondaryAfferentOnSensoryRegion
                        * p_.secondaryAfferentRestLength / p_.sensoryRegionRestLength
@@ -158,15 +167,50 @@ DoubleT Mileusnic2006IntrafusalFiber::calculateSecondaryAfferent() const {
     return term1 + term2;
 }
 
+DoubleT Mileusnic2006IntrafusalFiber::calculateStiffnessContributionToPolarRegionForce() const {
+    return calculateStiffnessContributionToPolarRegionForce(
+        sNew_.polarRegionLength, p_.polarRegionStiffness, p_.polarRegionRestLength);
+}
+DoubleT Mileusnic2006IntrafusalFiber::calculateVelocityContributionToPolarRegionForce() const {
+
+    const DoubleT beta = calculateBeta(i_.fDynamic, i_.fStatic, p_.beta0, p_.beta1, p_.beta2);
+    DoubleT coefficientOfAsymmetry = p_.coefficientOfAsymmetryLengthening;
+    if (sNew_.polarRegionVelocity < 0.)
+        coefficientOfAsymmetry = p_.coefficientOfAsymmetryShortening;
+    const DoubleT fvpr = calculateVelocityContributionToPolarRegionForce(sNew_.polarRegionLength,
+        sNew_.polarRegionVelocity,
+        beta,
+        coefficientOfAsymmetry,
+        p_.muscleFascicleSlackLength,
+        p_.velocityPowerTerm);
+    return fvpr;
+}
+
+DoubleT Mileusnic2006IntrafusalFiber::calculateFiberTension() const {
+    const DoubleT fspr = calculateStiffnessContributionToPolarRegionForce();
+    const DoubleT fvpr = calculateVelocityContributionToPolarRegionForce();
+    const DoubleT gamma = calculateGamma();
+    return fspr + fvpr + gamma;
+}
+
+//Represents polar region damping term
+DoubleT Mileusnic2006IntrafusalFiber::calculateBeta() const {
+    return calculateBeta(i_.fDynamic, i_.fStatic, p_.beta0, p_.beta1, p_.beta2);
+}
+
+//active-state force generator term
+DoubleT Mileusnic2006IntrafusalFiber::calculateGamma() const {
+    return calculateGamma(i_.fDynamic, i_.fStatic, p_.gamma1, p_.gamma2);
+}
+
 void Mileusnic2006IntrafusalFiber::calculateOutput() {
-    o_.beta = calculateBeta(i_.fDynamic, i_.fStatic, p_.beta0, p_.beta1, p_.beta2);
-    o_.gamma = calculateGamma(i_.fDynamic, i_.fStatic, p_.gamma1, p_.gamma2);
-    o_.fiberTension = calculateSensoryRegionForce(i_.normalisedMuscleFiberLength,
-        sNew_.polarRegionLength,
-        p_.sensoryRegionStiffness,
-        p_.sensoryRegionRestLength);
+    o_.beta = calculateBeta();
+    o_.gamma = calculateGamma();
+    o_.fiberTension = calculateFiberTension();
     o_.primaryAfferent = calculatePrimaryAfferent();
     o_.secondaryAfferent = calculateSecondaryAfferent();
+    o_.fspr = calculateStiffnessContributionToPolarRegionForce();
+    o_.fvpr = calculateVelocityContributionToPolarRegionForce();
 }
 
 void Mileusnic2006IntrafusalFiberActivationDynamics::integrate(DoubleT dt) {
@@ -200,13 +244,13 @@ Mileusnic2006MuscleSpindle::Mileusnic2006MuscleSpindle() {
     dynamicsBag1_.getParameters() = dynamicsBag1Parameters;
 
     Mileusnic2006IntrafusalFiberActivationDynamics::Parameters dynamicsBag2Parameters;
-    dynamicsBag1Parameters.freq = 60.;
-    dynamicsBag1Parameters.tau = 0.205;
+    dynamicsBag2Parameters.freq = 60.;
+    dynamicsBag2Parameters.tau = 0.205;
     dynamicsBag2_.getParameters() = dynamicsBag2Parameters;
 
     Mileusnic2006IntrafusalFiberActivationDynamics::Parameters dynamicsChainParameters;
-    dynamicsBag1Parameters.freq = 90.;
-    dynamicsBag1Parameters.tau = 1.;
+    dynamicsChainParameters.freq = 90.;
+    dynamicsChainParameters.tau = 1.;
     dynamicsChain_.getParameters() = dynamicsChainParameters;
     dynamicsChain_.getProperties().isChain = true;
 
@@ -328,9 +372,9 @@ void Mileusnic2006MuscleSpindle::integrate(DoubleT dt) {
  }
 
 void Mileusnic2006MuscleSpindle::validateState() {
-     dynamicsBag1_.validateState();
+    dynamicsBag1_.validateState();
     dynamicsBag2_.validateState();
-     dynamicsChain_.validateState();
+    dynamicsChain_.validateState();
     bag1_.validateState();
     bag2_.validateState();
     chain_.validateState();

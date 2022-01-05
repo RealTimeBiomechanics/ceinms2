@@ -1,6 +1,7 @@
-﻿#ifndef ceinms_Williams2014Spindle_h
-#define ceinms_Williams2014Spindle_h
+﻿#ifndef ceinms_Mileusnic2006MuscleSpindle_h
+#define ceinms_Mileusnic2006MuscleSpindle_h
 #include "ceinms2/Types.h"
+#include <algorithm>
 
 namespace ceinms {
 
@@ -22,30 +23,31 @@ class Mileusnic2006IntrafusalFiber {
     static constexpr std::string_view class_name = "Mileusnic2006IntrafusalFiber";
     friend Mileusnic2006MuscleSpindle;
     struct State {
-        DoubleT polarRegionLength = 0.;// normalized to 1
+        DoubleT polarRegionLength = 1.;// normalized
         DoubleT polarRegionVelocity = 0.;// calculated from the normalized lengthPolarRegion
     };
 
     struct Parameters {
-        DoubleT coefficientOfAsymmetryShortening; // `C_L` 
-        DoubleT coefficientOfAsymmetryLengthening;// `C_S` 
-        DoubleT muscleFascicleSlackLength;// `R` fascicle length below which force production is zero
+        DoubleT coefficientOfAsymmetryShortening;// `C_L`
+        DoubleT coefficientOfAsymmetryLengthening;// `C_S`
+        DoubleT
+            muscleFascicleSlackLength;// `R` fascicle length below which force production is zero
         DoubleT sensoryRegionRestLength;// `Lsr`
         DoubleT sensoryRegionStiffness;// `Ksr
-        DoubleT sensoryRegionThresholdLength; // `L_Nsr`
+        DoubleT sensoryRegionThresholdLength;// `L_Nsr`
         DoubleT polarRegionRestLength;// `Lpr`
         DoubleT polarRegionStiffness;// `Kpr`
         DoubleT polarRegionThresholdLength;// `L_Npr`
-        DoubleT velocityPowerTerm; // `a` in Mileusnic et al. 2006
-        DoubleT beta0; // Passive damping coefficient 
-        DoubleT beta1; // Coef. of damping due to dyn. fusimotor input 
-        DoubleT beta2; // Coef. of damping due to stat. fusimotor input
-        DoubleT gamma1; // Coef. of force generation due to dyn. fusimotor input
-        DoubleT gamma2; // Coef. of force generation due to stat. fusimotor input 
-        DoubleT sensoryRegionStretchToPrimaryAfferentFiring; // `G`
+        DoubleT velocityPowerTerm;// `a` in Mileusnic et al. 2006
+        DoubleT beta0;// Passive damping coefficient
+        DoubleT beta1;// Coef. of damping due to dyn. fusimotor input
+        DoubleT beta2;// Coef. of damping due to stat. fusimotor input
+        DoubleT gamma1;// Coef. of force generation due to dyn. fusimotor input
+        DoubleT gamma2;// Coef. of force generation due to stat. fusimotor input
+        DoubleT sensoryRegionStretchToPrimaryAfferentFiring;// `G`
         DoubleT sensoryRegionStretchToSecondaryAfferentFiring;// `G`
-        DoubleT percentageSecondaryAfferentOnSensoryRegion; // `X`
-        DoubleT secondaryAfferentRestLength; // `Lsecondary`
+        DoubleT percentageSecondaryAfferentOnSensoryRegion;// `X`
+        DoubleT secondaryAfferentRestLength;// `Lsecondary`
     };
 
     struct Input {
@@ -60,6 +62,8 @@ class Mileusnic2006IntrafusalFiber {
         DoubleT gamma = 0.;// active-state force generator term
         DoubleT primaryAfferent = 0.;
         DoubleT secondaryAfferent = 0.;
+        DoubleT fspr = 0.;
+        DoubleT fvpr = 0.;
     };
 
     struct Properties {};
@@ -89,6 +93,19 @@ class Mileusnic2006IntrafusalFiber {
     [[nodiscard]] Properties &getProperties() { return properties_; }
     [[nodiscard]] const Output &getOutput() const { return o_; }
 
+    // Output is in pulses per second
+    [[nodiscard]] DoubleT calculatePrimaryAfferent() const;
+
+    // Output is in pulses per second
+    [[nodiscard]] DoubleT calculateSecondaryAfferent() const;
+
+    [[nodiscard]] DoubleT calculateFiberTension() const;
+
+    [[nodiscard]] DoubleT calculateBeta() const;
+    [[nodiscard]] DoubleT calculateGamma() const;
+    [[nodiscard]] DoubleT calculateStiffnessContributionToPolarRegionForce() const;
+    [[nodiscard]] DoubleT calculateVelocityContributionToPolarRegionForce() const;
+
   private:
     DoubleT integratePolarRegionLength(DoubleT dt);
 
@@ -96,7 +113,9 @@ class Mileusnic2006IntrafusalFiber {
         DoubleT previousLengthPolarRegion,
         DoubleT currentLengthPolarRegion,
         DoubleT dt) {
-        return (currentLengthPolarRegion - previousLengthPolarRegion) / dt;
+        DoubleT polarRegionVelocity = (currentLengthPolarRegion - previousLengthPolarRegion) / dt;
+        polarRegionVelocity = std::clamp(polarRegionVelocity, -10., 10.);
+        return polarRegionVelocity;
     }
 
     [[nodiscard]] static DoubleT calculateVelocityContributionToPolarRegionForce(
@@ -112,14 +131,12 @@ class Mileusnic2006IntrafusalFiber {
         DoubleT polarRegionStiffness,
         DoubleT polarRegionRestLength);
 
-    [[nodiscard]] static DoubleT calculateSensoryRegionForce(
-        DoubleT normalisedMuscleFiberLength,
+    [[nodiscard]] static DoubleT calculateSensoryRegionForce(DoubleT normalisedMuscleFiberLength,
         DoubleT lengthPolarRegion,
         DoubleT stiffnessSensoryRegion,
         DoubleT restLengthSensoryRegion);
 
-    [[nodiscard]] static DoubleT calculateBeta(
-        DoubleT fDynamic,
+    [[nodiscard]] static DoubleT calculateBeta(DoubleT fDynamic,
         DoubleT fStatic,
         DoubleT beta0,
         DoubleT beta1,
@@ -127,12 +144,6 @@ class Mileusnic2006IntrafusalFiber {
 
     [[nodiscard]] static DoubleT
         calculateGamma(DoubleT fDynamic, DoubleT fStatic, DoubleT gamma1, DoubleT gamma2);
-
-    // Output is in pulses per second
-    [[nodiscard]] DoubleT calculatePrimaryAfferent() const;
-
-    // Output is in pulses per second
-    [[nodiscard]] DoubleT calculateSecondaryAfferent() const;
 
     std::string name_;
     Parameters p_;
@@ -208,12 +219,12 @@ class Mileusnic2006MuscleSpindle {
     struct State {};
 
     struct Parameters {
-        DoubleT primaryAfferentPartialOcclusion;// `S`
+        DoubleT primaryAfferentPartialOcclusion{ 0.156 };// `S`
     };
 
     struct Output {
-        DoubleT primaryAfferent;
-        DoubleT secondaryAfferent;
+        DoubleT primaryAfferent{ 0. };
+        DoubleT secondaryAfferent{ 0. };
     };
 
     struct Input {
@@ -257,6 +268,7 @@ class Mileusnic2006MuscleSpindle {
     const auto &getDynamicsChain() const { return dynamicsChain_; }
     auto &getDynamicsChain() { return dynamicsChain_; }
 
+    [[nodiscard]] const Output &getOutput() const { return o_; }
   private:
     Mileusnic2006IntrafusalFiber bag1_, bag2_, chain_;
     Mileusnic2006IntrafusalFiberActivationDynamics dynamicsBag1_, dynamicsBag2_, dynamicsChain_;
