@@ -27,7 +27,8 @@ class Mileusnic2006IntrafusalFiber {
     };
 
     struct Parameters {
-        DoubleT coefficientOfAsymmetry; // `C` 
+        DoubleT coefficientOfAsymmetryShortening; // `C_L` 
+        DoubleT coefficientOfAsymmetryLengthening;// `C_S` 
         DoubleT muscleFascicleSlackLength;// `R` fascicle length below which force production is zero
         DoubleT sensoryRegionRestLength;// `Lsr`
         DoubleT sensoryRegionStiffness;// `Ksr
@@ -41,7 +42,8 @@ class Mileusnic2006IntrafusalFiber {
         DoubleT beta2; // Coef. of damping due to stat. fusimotor input
         DoubleT gamma1; // Coef. of force generation due to dyn. fusimotor input
         DoubleT gamma2; // Coef. of force generation due to stat. fusimotor input 
-        DoubleT sensoryRegionStretchToAfferentFiring; // `G`
+        DoubleT sensoryRegionStretchToPrimaryAfferentFiring; // `G`
+        DoubleT sensoryRegionStretchToSecondaryAfferentFiring;// `G`
         DoubleT percentageSecondaryAfferentOnSensoryRegion; // `X`
         DoubleT secondaryAfferentRestLength; // `Lsecondary`
     };
@@ -147,30 +149,54 @@ class Mileusnic2006IntrafusalFiberActivationDynamics {
     static constexpr std::string_view class_name = "Mileusnic2006IntrafusalFiberActivationDynamics";
 
     struct State {
-        DoubleT activation; // `f`
+        DoubleT activation = 0.;// `f`
     };
 
     struct Parameters {
-        DoubleT tau; //Low-pass filter time constant
-        DoubleT freq; //Constant relating the fusimotor frequency to activation
+        DoubleT tau;// Low-pass filter time constant
+        DoubleT freq;// Constant relating the fusimotor frequency to activation
     };
 
     struct Input {
-        DoubleT fusimotorFrequency; //pulses per second
+        DoubleT fusimotorFrequency = 0.;// pulses per second
     };
 
-    void integrate_(const State &x, State &dxdt, const double /* t */) {
-        // x[0] is theta
-        // x[1] is theta_dot
-        dxdt.activation =
-            (i_.fusimotorFrequency / (i_.fusimotorFrequency + p_.freq) - x.activation) / p_.tau;
+    struct Properties {
+        bool isChain = false;
+    };
 
+    using Output = State;
+    [[nodiscard]] Parameters &getParameters() { return p_; }
+    [[nodiscard]] const Parameters &getParameters() const { return p_; }
+    [[nodiscard]] Input &getInput() { return i_; }
+    [[nodiscard]] const Input &getInput() const { return i_; }
+    [[nodiscard]] const State &getState() const { return s_; }
+    [[nodiscard]] State &getState() { return s_; }
+    [[nodiscard]] const Output &getOutput() const { return s_; }
+    [[nodiscard]] Properties &getProperties() { return properties_; }
+    [[nodiscard]] const Properties &getProperties() const { return properties_; }
+
+    void setInput(Frequency fusimotorFrequency) {
+        i_.fusimotorFrequency = fusimotorFrequency.get();
+    }
+    void setFusimotorFrequency(DoubleT fusimotorFrequency) {
+        i_.fusimotorFrequency = fusimotorFrequency;
+    }
+    void integrate(DoubleT dt);
+    void validateState() { s_ = sNew_; }
+    void calculateOutput() { /*intentionally left blank*/
+    }
+    void evaluate(DoubleT dt) {
+        integrate(dt);
+        calculateOutput();
+        validateState();
     }
 
-    private:
+  private:
     Input i_;
-      Parameters p_;
-
+    Parameters p_;
+    State s_, sNew_;
+    Properties properties_;
 };
 
 class Mileusnic2006MuscleSpindle {
@@ -179,11 +205,10 @@ class Mileusnic2006MuscleSpindle {
     using concept_t = component_t;
     static constexpr std::string_view class_name = "Mileusnic2006MuscleSpindle";
 
-    struct State {
-    };
+    struct State {};
 
     struct Parameters {
-        DoubleT primaryAfferentPartialOcclusion; // `S`
+        DoubleT primaryAfferentPartialOcclusion;// `S`
     };
 
     struct Output {
@@ -193,14 +218,18 @@ class Mileusnic2006MuscleSpindle {
 
     struct Input {
         DoubleT normalizedMuscleFiberLength = 1.;// `L` length of the muscle fiber
-        DoubleT fStatic = 0.;// Static fusimotor activation, between 0 and 1
-        DoubleT fDynamic = 0.;// Dynamic fusimotor activation, between 0 and 1
+        DoubleT gStatic = 0.;// Static fusimotor frequency in pulses per second
+        DoubleT gDynamic = 0.;// Dynamic fusimotor frequency in pulses per second
     };
     struct Properties {};
 
-    void setActivation(DoubleT fStatic, DoubleT fDynamic);
+    Mileusnic2006MuscleSpindle();
+
+    // void setActivation(DoubleT fStatic, DoubleT fDynamic);
     void setNormalizedMuscleFiberLength(DoubleT normalizedMuscleFiberLength);
-    void setInput(Activation fStatic, Activation fDynamic);
+    void setFusimotorFrequency(DoubleT gStatic, DoubleT gDynamic);
+    void setInput(Frequency gStatic, Frequency gDynamic);
+    void setInput(NormalizedFiberLength normalizedMuscleFiberLength);
     void setInput(Input input);
     // From input and current state calculate the new state of the system
     void integrate(DoubleT dt);
@@ -221,12 +250,20 @@ class Mileusnic2006MuscleSpindle {
     const auto &getChain() const { return chain_; }
     auto &getChain() { return chain_; }
 
-    private:
-        Mileusnic2006IntrafusalFiber bag1_, bag2_, chain_;
-        Parameters p_;
-        Input i_;
-        Output o_;
-        std::string name_;
+    const auto &getDynamicsBag1() const { return dynamicsBag1_; }
+    auto &getDynamicsBag1() { return dynamicsBag1_; }
+    const auto &getDynamicsBag2() const { return dynamicsBag2_; }
+    auto &getDynamicsBag2() { return dynamicsBag2_; }
+    const auto &getDynamicsChain() const { return dynamicsChain_; }
+    auto &getDynamicsChain() { return dynamicsChain_; }
+
+  private:
+    Mileusnic2006IntrafusalFiber bag1_, bag2_, chain_;
+    Mileusnic2006IntrafusalFiberActivationDynamics dynamicsBag1_, dynamicsBag2_, dynamicsChain_;
+    Parameters p_;
+    Input i_;
+    Output o_;
+    std::string name_;
 };
 
 }// namespace ceinms

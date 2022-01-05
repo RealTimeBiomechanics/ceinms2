@@ -21,7 +21,7 @@ using component_mimo_t = Selector<Concept::Component_MIMO>;
 using stage_t = Selector<Concept::Stage>;
 using source_t = Selector<Concept::Source>;
 
-enum class DataType { Excitation, MusculotendonLength, MomentArm, Activation, Force, Torque };
+enum class DataType { Excitation, MusculotendonLength, MomentArm, Activation, Force, Torque, Frequency, NormalizedFiberLength };
 
 template<DataType T>
 constexpr std::string_view getDataTypeName() {
@@ -31,6 +31,8 @@ constexpr std::string_view getDataTypeName() {
     if constexpr (T == DataType::Activation) return "Activation";
     if constexpr (T == DataType::Force) return "Force";
     if constexpr (T == DataType::Torque) return "Torque";
+    if constexpr (T == DataType::Frequency) return "Frequency";
+    if constexpr (T == DataType::NormalizedFiberLength) return "NormalizedFiberLength";
     return "Undefined";
 }
 
@@ -57,6 +59,8 @@ using MomentArm = Data<DataType::MomentArm>;
 using Activation = Data<DataType::Activation>;
 using Force = Data<DataType::Force>;
 using Torque = Data<DataType::Torque>;
+using Frequency = Data<DataType::Frequency>;
+using NormalizedFiberLength = Data<DataType::NormalizedFiberLength>;
 
 
 template<typename T>
@@ -69,11 +73,12 @@ concept ActivationGenerator = requires(T m) {
     m.getOutput().activation;
 };
 
-
 template<typename T>
 concept ExcitationGenerator = requires(T m) {
     m.getOutput().excitation;
 };
+
+
 
 }// namespace ceinms
 #endif

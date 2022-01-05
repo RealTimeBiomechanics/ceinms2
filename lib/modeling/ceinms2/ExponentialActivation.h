@@ -59,9 +59,14 @@ class ExponentialActivation {
     [[nodiscard]] std::string getName() const { return name_; }
     void setName(std::string name) { name_ = name; }
     void evaluate(DoubleT dt);
-    Parameters &updParameters() { return p_; }
+  //  Parameters &getParameters() { return p_; }
     [[nodiscard]] Parameters getParameters() const { return p_; }
-    State &updState() { return s_; }
+    void setParameters(const Parameters &p) {
+        p_ = p;
+        updateCoefficients();
+    }
+    
+    State &getState() { return s_; }
     [[nodiscard]] State getState() const { return s_; }
     [[nodiscard]] Output getOutput() const { return o_; }
     [[nodiscard]] Input &getInput() { return i_; }
