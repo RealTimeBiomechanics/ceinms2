@@ -8,10 +8,10 @@
 
 
 int rampStretches() {
-    std::ofstream outF("Mileusnic2006Figure1_description.txt");
+    std::ofstream outF("Mileusnic2006MuscleSpindle_rampStretches_description.txt");
     outF << "filename,ramping_velocity,fusimotor_static,fusimotor_dynamic,primary_afferent,secondary_afferent\n";
     ceinms::Mileusnic2006MuscleSpindle spindle;
-    std::vector<double> stretchVelocities = { 0.11, 0.66, 1.55 }; // relative to normalised length
+    std::vector<double> stretchVelocities = { 0.11, 0.66, 1.55 }; // relative to normalized length
     std::vector<std::pair<double, double>> stimulations = { { 0., 0. }, { 0., 70. }, { 70., 0. } };
     double dt = 0.001;
     const double startLength = 0.95;
@@ -20,7 +20,7 @@ int rampStretches() {
     int count = 0;
     for (const auto& stim : stimulations) {
         for (const auto& vel : stretchVelocities) {
-            std::string modelOutputFilename("Mileusnic2006Figure1_" + std::to_string(count) + ".csv");
+            std::string modelOutputFilename("Mileusnic2006MuscleSpindle_rampStretches_" + std::to_string(count) + ".csv");
             outF << modelOutputFilename << "," << std::setprecision(3) << vel << ","
                  << std::setprecision(3) << stim.first << "," << std::setprecision(3) << stim.second
                  << ",1,1\n";
@@ -36,6 +36,54 @@ int rampStretches() {
                 spindle.evaluate(dt);
                 results.pushRow(t,
                     { l, spindle.getOutput().primaryAfferent, spindle.getOutput().secondaryAfferent });
+                t += dt;
+            }
+            results.print(modelOutputFilename);
+            ++count;
+        }
+    }
+    return 0;
+}
+
+int triangularStretches() {
+    std::ofstream outF("Mileusnic2006MuscleSpindle_triangularStretches_description.txt");
+    outF << "filename,ramping_velocity,fusimotor_static,fusimotor_dynamic,primary_afferent,"
+            "secondary_afferent\n";
+    ceinms::Mileusnic2006MuscleSpindle spindle;
+    std::vector<double> stretchVelocities = { 0.045, 0.18 };// relative to normalised length
+    std::vector<std::pair<double, double>> stimulations = {
+        { 0., 35. }, { 35., 0. }, { 0., 70. }, { 70., 0. }, { 0., 200. }, { 200., 0. } 
+    };
+    double dt = 0.001;
+    const double startLength = 0.90;
+    const double stopLength = 1.08;
+    int count = 0;
+    for (const auto &stim : stimulations) {
+        for (const auto &vel : stretchVelocities) {
+            std::string modelOutputFilename(
+                "Mileusnic2006MuscleSpindle_triangularStretches_" + std::to_string(count) + ".csv");
+            outF << modelOutputFilename << "," << std::setprecision(3) << vel << ","
+                 << std::setprecision(3) << stim.first << "," << std::setprecision(3) << stim.second
+                 << ",1,1\n";
+            double t = 0.;
+            double l = startLength;
+            ceinms::DataTable<double> results;
+            results.setLabels({ "length", "primary_afferent", "secondary_afferent" });
+          
+            double rampDownTime = (stopLength - startLength) / vel;
+            for (int i = 0; i < 8000; ++i) {
+                if (t < rampDownTime) 
+                    l = startLength + vel * t;
+                else
+                    l = stopLength - vel * (t - rampDownTime);
+                l = std::clamp(l, startLength, stopLength);
+                spindle.setNormalizedMuscleFiberLength(l);
+                spindle.setFusimotorFrequency(stim.first, stim.second);
+                spindle.evaluate(dt);
+                results.pushRow(t,
+                    { l,
+                        spindle.getOutput().primaryAfferent,
+                        spindle.getOutput().secondaryAfferent });
                 t += dt;
             }
             results.print(modelOutputFilename);
@@ -126,8 +174,8 @@ int test2() {
 
 int main() {
     bool failed = false;
-    failed |= ceinms::runTest(&rampStretches, "Correctness test");
-   
+    failed |= ceinms::runTest(&rampStretches, "Ramp stretches");
+    failed |= ceinms::runTest(&triangularStretches, "Triangular stretches");
     //failed |= ceinms::runTest(&test1, "Correctness test");
    // failed |= ceinms::runTest(&test0, "Mileusnic2006IntrafusalFiberActivationDynamics test");
     return failed;

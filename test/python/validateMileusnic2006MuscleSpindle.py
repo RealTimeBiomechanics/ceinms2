@@ -6,31 +6,30 @@ def formatAxis(ax):
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
-
 def rampTest(inputDataDir, modelOutputDir):
     nrows = 5
     ncols = 3
     fig, ax = plt.subplots(nrows=nrows,ncols=ncols, sharex=True, sharey=False)
-    figure1Dir = inputDataDir + "/mileusnic2006/Figure1/"
-    dataList = pd.read_csv(figure1Dir+"description.txt")
+    rampDir = inputDataDir + "/mileusnic2006/ramp/"
+    dataList = pd.read_csv(rampDir+"description.txt")
     dataList.sort_values("ramping_velocity", inplace=True)
     print(dataList)
     enum = 0
     vels = [0.11, 0.66, 1.55]
     fusimotors = [(0.0, 0.0), (70.0, 0.0), (0.0, 70.)]
     for index, row in dataList.iterrows():
-        data = pd.read_csv(figure1Dir+row['filename'], header=None)
+        data = pd.read_csv(rampDir+row['filename'], header=None)
         if(row['secondary_afferent']):
             r = nrows-2
         else:
             r = fusimotors.index((row['fusimotor_dynamic'],row['fusimotor_static'] ))
             
         axx= ax[r][vels.index(row['ramping_velocity'])]
-        data.plot(x=0, y=1, kind='scatter', ax=axx)
+        data.plot(x=0, y=1, kind='scatter', ax=axx, legend=False)
         formatAxis(axx)
         enum = enum + 1 
 
-    outDataList = pd.read_csv(modelOutputDir + "/Mileusnic2006Figure1_description.txt")
+    outDataList = pd.read_csv(modelOutputDir + "/Mileusnic2006MuscleSpindle_rampStretches_description.txt")
     outDataList.sort_values("ramping_velocity", inplace=True)
     enum = 0
     for index, row in outDataList.iterrows():
@@ -38,7 +37,7 @@ def rampTest(inputDataDir, modelOutputDir):
         r = fusimotors.index((row['fusimotor_dynamic'],row['fusimotor_static'] ))
         axx= ax[r][vels.index(row['ramping_velocity'])]
         yy = 'primary_afferent'
-        data.plot(x='Time', y=yy, kind='line', ax=axx)
+        data.plot(x='Time', y=yy, kind='line', ax=axx, legend=False)
         formatAxis(axx)
         if row['fusimotor_dynamic'] + row['fusimotor_static'] ==0.:
             yy = 'secondary_afferent' 
