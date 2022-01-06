@@ -23,7 +23,7 @@ void Mileusnic2006IntrafusalFiber::setInput(Activation fStatic, Activation fDyna
 void Mileusnic2006IntrafusalFiber::setInput(Input input) {
     i_ = input;
 }
-/*
+
 DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
     DoubleT minPolarRegionLength = p_.polarRegionRestLength;
     DoubleT maxPolarRegionLength = i_.normalisedMuscleFiberLength;
@@ -66,15 +66,15 @@ DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
         wdbSolve(f, minPolarRegionLength, maxPolarRegionLength, 1e-9);
     return currentLengthPolarRegion;
 }
-*/
 
+/*
 DoubleT Mileusnic2006IntrafusalFiber::integratePolarRegionLength(DoubleT dt) {
  
     const DoubleT polarRegionLength = i_.normalisedMuscleFiberLength - p_.sensoryRegionRestLength;
     return std::clamp(polarRegionLength, p_.polarRegionRestLength, i_.normalisedMuscleFiberLength);
 
 }
-    
+    */
 void Mileusnic2006IntrafusalFiber::integrate(DoubleT dt) {
     sNew_.polarRegionLength = integratePolarRegionLength(dt);
     sNew_.polarRegionVelocity = calculatePolarRegionVelocityFromPolarRegionLength(

@@ -1,0 +1,1 @@
+This data was digitized from the paper  Mileusnic, M. P., I. E. Brown, N. Lan and G. E. Loeb (2006). "Mathematical models of proprioceptors. I. Control and transduction in the muscle spindle." J Neurophysiol 96(4): 1772-1788. using WebPlotDigitizer https://github.com/ankitrohatgi/WebPlotDigitizer

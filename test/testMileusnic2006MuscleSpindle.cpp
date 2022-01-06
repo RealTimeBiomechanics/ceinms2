@@ -1,9 +1,49 @@
 #include "ceinms2/Mileusnic2006MuscleSpindle.h"
 #include "ceinms2/Lloyd2003Muscle.h"
 #include "ceinms2/testingUtilities.h"
+#include "ceinms2/DataTable.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
 
+
+int rampStretches() {
+    std::ofstream outF("Mileusnic2006Figure1_description.txt");
+    outF << "filename,ramping_velocity,fusimotor_static,fusimotor_dynamic,primary_afferent,secondary_afferent\n";
+    ceinms::Mileusnic2006MuscleSpindle spindle;
+    std::vector<double> stretchVelocities = { 0.11, 0.66, 1.55 }; // relative to normalised length
+    std::vector<std::pair<double, double>> stimulations = { { 0., 0. }, { 0., 70. }, { 70., 0. } };
+    double dt = 0.001;
+    const double startLength = 0.95;
+    const double stopLength = 1.08;
+    const double rampStartTime = 1.;
+    int count = 0;
+    for (const auto& stim : stimulations) {
+        for (const auto& vel : stretchVelocities) {
+            std::string modelOutputFilename("Mileusnic2006Figure1_" + std::to_string(count) + ".csv");
+            outF << modelOutputFilename << "," << std::setprecision(3) << vel << ","
+                 << std::setprecision(3) << stim.first << "," << std::setprecision(3) << stim.second
+                 << ",1,1\n";
+            double t = 0.;
+            double l = startLength;
+            ceinms::DataTable<double> results;
+            results.setLabels({ "length", "primary_afferent", "secondary_afferent" });
+            for (int i = 0; i < 4000; ++i) {
+                if (t > rampStartTime) l = startLength + vel * (t - rampStartTime);
+                if (l > stopLength) l = stopLength;
+                spindle.setNormalizedMuscleFiberLength(l);
+                spindle.setFusimotorFrequency(stim.first, stim.second);
+                spindle.evaluate(dt);
+                results.pushRow(t,
+                    { l, spindle.getOutput().primaryAfferent, spindle.getOutput().secondaryAfferent });
+                t += dt;
+            }
+            results.print(modelOutputFilename);
+            ++count;
+        }
+    }
+    return 0;
+}
 
 
 int test0() {
@@ -86,7 +126,9 @@ int test2() {
 
 int main() {
     bool failed = false;
-    failed |= ceinms::runTest(&test0, "Correctness test");
+    failed |= ceinms::runTest(&rampStretches, "Correctness test");
+   
+    //failed |= ceinms::runTest(&test1, "Correctness test");
    // failed |= ceinms::runTest(&test0, "Mileusnic2006IntrafusalFiberActivationDynamics test");
     return failed;
 }

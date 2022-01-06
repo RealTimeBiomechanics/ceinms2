@@ -1,0 +1,13 @@
+filename,ramping_velocity,fusimotor_dynamic,fusimotor_static,primary_afferent,secondary_afferent
+Figure1a.csv,0.11,0.,0.,1,0
+Figure1b.csv,0.66,0.,0.,1,0
+Figure1c.csv,1.55,0.,0.,1,0
+Figure1d.csv,0.11,70.,0.,1,0
+Figure1e.csv,0.66,70.,0.,1,0
+Figure1f.csv,1.55,70.,0.,1,0
+Figure1g.csv,0.11,0.,70.,1,0
+Figure1h.csv,0.66,0.,70.,1,0
+Figure1i.csv,1.55,0.,70.,1,0
+Figure1j.csv,0.11,0.,0.,0,1
+Figure1k.csv,0.66,0.,0.,0,1
+Figure1l.csv,1.55,0.,0.,0,1
