@@ -187,7 +187,7 @@ class Mileusnic2006IntrafusalFiberActivationDynamics {
     [[nodiscard]] Properties &getProperties() { return properties_; }
     [[nodiscard]] const Properties &getProperties() const { return properties_; }
 
-    void setInput(Frequency fusimotorFrequency) {
+    void setInput(SpikeRate fusimotorFrequency) {
         i_.fusimotorFrequency = fusimotorFrequency.get();
     }
     void setFusimotorFrequency(DoubleT fusimotorFrequency) {
@@ -239,7 +239,7 @@ class Mileusnic2006MuscleSpindle {
     // void setActivation(DoubleT fStatic, DoubleT fDynamic);
     void setNormalizedMuscleFiberLength(DoubleT normalizedMuscleFiberLength);
     void setFusimotorFrequency(DoubleT gStatic, DoubleT gDynamic);
-    void setInput(Frequency gStatic, Frequency gDynamic);
+    void setInput(SpikeRate gStatic, SpikeRate gDynamic);
     void setInput(NormalizedFiberLength normalizedMuscleFiberLength);
     void setInput(Input input);
     // From input and current state calculate the new state of the system

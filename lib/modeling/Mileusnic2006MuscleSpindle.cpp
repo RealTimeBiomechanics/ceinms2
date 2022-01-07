@@ -339,7 +339,7 @@ void Mileusnic2006MuscleSpindle::setFusimotorFrequency(DoubleT gStatic, DoubleT 
 
 }
 
-void Mileusnic2006MuscleSpindle::setInput(Frequency gStatic, Frequency gDynamic) {
+void Mileusnic2006MuscleSpindle::setInput(SpikeRate gStatic, SpikeRate gDynamic) {
     setFusimotorFrequency(gStatic.get(), gDynamic.get());
 }
 

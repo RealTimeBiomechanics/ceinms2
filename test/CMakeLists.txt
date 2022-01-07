@@ -30,6 +30,11 @@ target_include_directories(testMileusnic2006MuscleSpindle PRIVATE ${testing_INCL
 target_link_libraries(testMileusnic2006MuscleSpindle modeling project_options project_warnings)
 add_test(TestMileusnic2006MuscleSpindle testMileusnic2006MuscleSpindle)
 
+add_executable(testPoissonGenerator testPoissonGenerator.cpp)
+target_include_directories(testPoissonGenerator PRIVATE ${testing_INCLUDE_DIRS})
+target_link_libraries(testPoissonGenerator modeling project_options project_warnings)
+add_test(TestPoissonGenerator testPoissonGenerator)
+
 add_executable(testBoostAutodiff testBoostAutodiff.cpp)
 target_link_libraries(testBoostAutodiff modeling project_options project_warnings)
 target_include_directories(testBoostAutodiff PRIVATE ${Boost_INCLUDE_DIRS} ${testing_INCLUDE_DIRS})
