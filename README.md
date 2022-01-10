@@ -74,6 +74,14 @@ int main() {
 
 ### Components
 
+#### Muscle spindle
+CEINMS implements a computational model of the muscle spindle as described in Mileusnic, M. P., I. E. Brown, N. Lan and G. E. Loeb (2006). 
+"Mathematical models of proprioceptors. I. Control and transduction in the muscle spindle." J Neurophysiol 96(4): 1772-1788. The following is a validation of the implemented model, which replicates the tests in Mileusnic et al., where dots indicate experimental data.
+
+![Muscle spindle validation during ramp tests](/doc/fig/Mileusnic2006MuscleSpindle_rampStretches.png)
+
+
+
 ### Data sources
 
 
