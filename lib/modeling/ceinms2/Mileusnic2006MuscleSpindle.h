@@ -164,8 +164,8 @@ class Mileusnic2006IntrafusalFiberActivationDynamics {
     };
 
     struct Parameters {
-        DoubleT tau;// Low-pass filter time constant
-        DoubleT freq;// Constant relating the fusimotor frequency to activation
+        DoubleT tau = 1.;// Low-pass filter time constant
+        DoubleT freq = 1.;// Constant relating the fusimotor frequency to activation
     };
 
     struct Input {
