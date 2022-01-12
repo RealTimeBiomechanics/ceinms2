@@ -29,7 +29,8 @@ enum class DataType {
     Force,
     Torque,
     SpikeRate,
-    NormalizedFiberLength
+    NormalizedFiberLength,
+    Current
 };
 
 template<DataType T>
@@ -42,6 +43,7 @@ constexpr std::string_view getDataTypeName() {
     if constexpr (T == DataType::Torque) return "Torque";
     if constexpr (T == DataType::SpikeRate) return "SpikeRate";
     if constexpr (T == DataType::NormalizedFiberLength) return "NormalizedFiberLength";
+    if constexpr (T == DataType::Current) return "NormalizedFiberLength";
     return "Undefined";
 }
 
@@ -70,6 +72,7 @@ using Force = Data<DataType::Force>;
 using Torque = Data<DataType::Torque>;
 using SpikeRate = Data<DataType::SpikeRate>;
 using NormalizedFiberLength = Data<DataType::NormalizedFiberLength>;
+using Current = Data<DataType::Current>;
 
 
 template<typename T>

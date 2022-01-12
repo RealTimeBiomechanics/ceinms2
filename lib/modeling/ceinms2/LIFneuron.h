@@ -41,10 +41,10 @@ class LIFneuron {
     };
 
     void setCurrent(DoubleT current) { i_.current = current; }
-
+    void setInput(Current current) { i_.current = current.get(); }
     [[nodiscard]] const Output &getOutput() const { return o_; }
     [[nodiscard]] const State &getState() const { return s_; }
-
+    [[nodiscard]] Parameters &getParameters() { return p_; }
 
     void integrate(DoubleT dt) {
         boost::numeric::odeint::runge_kutta4<DoubleT> stepper;
