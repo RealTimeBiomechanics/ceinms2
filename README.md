@@ -78,6 +78,32 @@ int main() {
 CEINMS implements a computational model of the muscle spindle as described in Mileusnic, M. P., I. E. Brown, N. Lan and G. E. Loeb (2006). 
 "Mathematical models of proprioceptors. I. Control and transduction in the muscle spindle." J Neurophysiol 96(4): 1772-1788. The following is a validation of the implemented model, which replicates the tests in Mileusnic et al., where dots indicate experimental data.
 
+Code example
+```cpp
+
+ceinms::Mileusnic2006MuscleSpindle spindle;
+std::vector<double> stretchVelocities = { 0.11, 0.66, 1.55 }; // relative to normalized length
+std::vector<std::pair<double, double>> stimulations = { { 0., 0. }, { 0., 70. }, { 70., 0. } };
+double dt = 0.001;
+const double startLength = 0.95;
+const double stopLength = 1.08;
+const double rampStartTime = 1.;
+for (const auto& stim : stimulations) {
+    for (const auto& vel : stretchVelocities) {
+        double t = 0.;
+        double l = startLength;
+        for (int i = 0; i < 4000; ++i) {
+            if (t > rampStartTime) l = startLength + vel * (t - rampStartTime);
+            if (l > stopLength) l = stopLength;
+            spindle.setNormalizedMuscleFiberLength(l);
+            spindle.setFusimotorFrequency(stim.first, stim.second);
+            spindle.evaluate(dt);
+            // results are stored in ceinms::Mileusnic2006MuscleSpindle::Output structure
+            auto output = spindle.getOutput();
+    }
+}
+```
+
 ![Muscle spindle validation during ramp tests](/doc/fig/Mileusnic2006MuscleSpindle_rampStretches.png)
 
 
