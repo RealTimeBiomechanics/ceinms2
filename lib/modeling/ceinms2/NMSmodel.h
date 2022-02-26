@@ -354,6 +354,11 @@ class NMSmodel {
 
     void validateState() noexcept;
 
+    template<typename T>
+    void calculateOutput() noexcept;
+
+    void calculateOutput() noexcept;
+
   private:
     std::tuple<Stage<Args>...> stages_;
     // This can be improved so that the type of the sources is automatically derived from the input
@@ -517,6 +522,11 @@ void NMSmodel<Args...>::validateState() noexcept {
     std::get<Stage<T>>(stages_).validateState();
 }
 
+template<typename... Args>
+template<typename T>
+void NMSmodel<Args...>::calculateOutput() noexcept {
+    std::get<Stage<T>>(stages_).calculateOutput();
+}
 
 
 //Evaluate all the `Stage`s in the order in which they were defined
@@ -533,6 +543,11 @@ void NMSmodel<Args...>::integrate(DoubleT dt) noexcept {
 template<typename... Args>
 void NMSmodel<Args...>::validateState() noexcept {
     std::apply([](auto &&... args) { (args.validateState(), ...); }, stages_);
+}
+
+template<typename... Args>
+void NMSmodel<Args...>::calculateOutput() noexcept {
+    std::apply([](auto &&... args) { (args.calculateOutput(), ...); }, stages_);
 }
 
 template<typename... Args>
