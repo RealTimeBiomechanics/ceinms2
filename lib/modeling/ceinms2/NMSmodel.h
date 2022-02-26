@@ -128,6 +128,12 @@ class Stage {
         }
     }
 
+    void calculateOutput() noexcept {
+        for (const auto &c : components_) {
+            c->calculateOutput();
+        }
+    }
+
     /*Need to check what slot is used to connect to a parent with multi input multi output*/
     template<typename U>
     void connectToParent(Socket childSocket, const std::shared_ptr<U> parent) noexcept {
