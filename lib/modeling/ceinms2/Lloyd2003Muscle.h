@@ -133,6 +133,12 @@ class Lloyd2003Muscle {
         bool doCalculateSecondaryOutput = true;
     };
 
+    Lloyd2003Muscle() {
+        s_.fiberLength = p_.optimalFiberLength;
+        s_.fiberVelocity = 0.;
+    }
+
+
     Lloyd2003Muscle(Parameters parameters)
         : p_(parameters) {
         s_.fiberLength = p_.optimalFiberLength;
