@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE STRING "")
-  message(
-    "Using vcpkg."
-  )
+  message( STATUS "Using vcpkg." )
 endif()
 
 # Set the project name to your project name, my project isn't very descriptive
@@ -52,9 +50,7 @@ find_package(Eigen3 REQUIRED)
 add_definitions(/DROOT_DIR="${CMAKE_CURRENT_LIST_DIR}")
 if(ENABLE_TESTING)
   enable_testing()
-  message(
-    "Building Tests."
-  )
+  message( STATUS "Building Tests." )
   add_subdirectory(test)
 endif()
 
