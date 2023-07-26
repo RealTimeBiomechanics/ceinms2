@@ -138,7 +138,6 @@ class Lloyd2003Muscle {
         s_.fiberVelocity = 0.;
     }
 
-
     Lloyd2003Muscle(Parameters parameters)
         : p_(parameters) {
         s_.fiberLength = p_.optimalFiberLength;
@@ -298,7 +297,8 @@ class Lloyd2003Muscle {
     const P4 &maxIsometricForce,
     const CubicSpline &tendonForceStrainCurve);
 
-    DoubleT integrateFiberLength(DoubleT dt);
+    DoubleT integrateFiberLength(DoubleT dt) const;
+    DoubleT integrateFiberLengthStiffTendon(DoubleT dt) const;
     std::string name_;
     Parameters p_;
     State s_, sNew_;

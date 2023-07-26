@@ -97,7 +97,7 @@ void Lloyd2003Muscle::setState(State state) {
 
 
 
-DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
+DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) const {
     DoubleT minFiberLength = 0.2 * p_.optimalFiberLength;
     DoubleT maxFiberLength = 2 * p_.optimalFiberLength;
 
@@ -130,8 +130,20 @@ DoubleT Lloyd2003Muscle::integrateFiberLength(DoubleT dt) {
         return v;
     };
 
-    const auto currentFiberLength = wdbSolve(f, minFiberLength, maxFiberLength, 1e-9);
-    return currentFiberLength;
+    try {
+        const auto currentFiberLength = wdbSolve(f, minFiberLength, maxFiberLength, 1e-9);
+        return currentFiberLength;
+    } catch (std::exception &e) {
+        std::cout << class_name << 
+            "." + name_ + " could not calculate fiber length\n" + e.what() << std::endl;
+        return s_.fiberLength;
+    }
+}
+
+DoubleT Lloyd2003Muscle::integrateFiberLengthStiffTendon(DoubleT dt) const {
+    const DoubleT first = p_.optimalFiberLength * std::sin(p_.pennationAngleAtOptimalFiberLength);
+    const DoubleT second = i_.musculotendonLength - p_.tendonSlackLength;
+    return std::sqrt(first * first + second * second);
 }
 
 void Lloyd2003Muscle::calculateOutput() {
@@ -389,7 +401,10 @@ void Lloyd2003Muscle::equilibrate() {
 }
 
 void Lloyd2003Muscle::integrate(DoubleT dt) {
-    sNew_.fiberLength = integrateFiberLength(dt);
+    if (properties_.doUseStiffTendon) 
+        sNew_.fiberLength = integrateFiberLengthStiffTendon(dt);
+    else
+        sNew_.fiberLength = integrateFiberLength(dt);
     sNew_.fiberVelocity =
         calculateFiberVelocityFromFiberLength(s_.fiberLength, sNew_.fiberLength, dt);
 }

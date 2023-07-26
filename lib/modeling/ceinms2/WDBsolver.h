@@ -31,6 +31,7 @@
 
 #include <limits>
 #include <cmath>
+#include <stdexcept>
 
 template<typename T>
 int sgn(T val) {
@@ -62,7 +63,7 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
     double tol1;
     double xm;
     if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
-        throw("Root must be bracketed in wdbSolve");
+        throw(std::domain_error("Root must be bracketed in wdbSolve"));
     }
     fc = fb;
     for (int iter = 0; iter < ITMAX; iter++) {
@@ -119,7 +120,7 @@ double wdbSolve(T &func, double x1, double x2, double tol) {
         }
         fb = func(b);
     }
-    throw("Maximum number of iterations exceeded in zbrent");
+    throw(std::domain_error("Maximum number of iterations exceeded in zbrent"));
 }
 
 
