@@ -365,6 +365,9 @@ class NMSmodel {
 
     void calculateOutput() noexcept;
 
+    using State = std::tuple<std::vector<typename Args::State>...>; 
+    using Parameters = std::tuple<std::vector<typename Args::Parameters>...>; 
+
   private:
     std::tuple<Stage<Args>...> stages_;
     // This can be improved so that the type of the sources is automatically derived from the input

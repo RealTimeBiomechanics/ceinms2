@@ -385,7 +385,7 @@ void Lloyd2003Muscle::equilibrate() {
     do {
         integrate(0.001);
         validateState();
-    } while (sNew_.fiberVelocity > tol);
+    } while (std::abs(sNew_.fiberVelocity) > tol);
 }
 
 void Lloyd2003Muscle::integrate(DoubleT dt) {
