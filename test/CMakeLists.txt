@@ -35,6 +35,11 @@ target_include_directories(testPoissonGenerator PRIVATE ${testing_INCLUDE_DIRS})
 target_link_libraries(testPoissonGenerator modeling project_options project_warnings)
 add_test(TestPoissonGenerator testPoissonGenerator)
 
+add_executable(testLIFneuron testLIFneuron.cpp)
+target_include_directories(testLIFneuron PRIVATE ${testing_INCLUDE_DIRS})
+target_link_libraries(testLIFneuron modeling project_options project_warnings)
+add_test(TestLIFneuron testLIFneuron)
+
 add_executable(testBoostAutodiff testBoostAutodiff.cpp)
 target_link_libraries(testBoostAutodiff modeling project_options project_warnings)
 target_include_directories(testBoostAutodiff PRIVATE ${Boost_INCLUDE_DIRS} ${testing_INCLUDE_DIRS})
