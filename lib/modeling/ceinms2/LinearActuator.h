@@ -12,6 +12,8 @@ class LinearActuator {
     using concept_t = component_t;
     static constexpr std::string_view class_name = "LinearActuator";
 
+    struct State;
+
     struct Parameters {
         DoubleT maximumForce{ 1. };
     };

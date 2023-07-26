@@ -281,6 +281,8 @@ class MultiInputMultiOutput {
   public:
     using concept_t = component_mimo_t;
     static constexpr std::string_view class_name = "MultiInputMultiOutput";
+    struct State;
+    struct Parameters;
     MultiInputMultiOutput(size_t nInput, size_t nOutput)
         : nInput_(nInput)
         , nOutput_(nOutput) {

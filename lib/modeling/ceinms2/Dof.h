@@ -21,6 +21,7 @@ class Dof {
         std::vector<DoubleT> momentArms;
     };
 
+    struct State;
     struct Parameters {
         unsigned n{ 1 };
     };

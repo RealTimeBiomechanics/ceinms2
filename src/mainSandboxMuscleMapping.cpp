@@ -57,9 +57,6 @@ int main() {
     model.addComponent(act);
     model.connect<EMGMapping, ElectromechanicalDelay>({ "emgGenerator", 0 }, "mtu1");
     model.connect<ElectromechanicalDelay, ExponentialActivation>();
-
-
-
     return 0;
 
 }

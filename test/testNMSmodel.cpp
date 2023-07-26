@@ -36,6 +36,8 @@ namespace ceinms {
 template<int N>
 class BypassComponent {
   public:
+    struct State;
+    struct Parameters;
     struct Output {
         DoubleT output{ 0 };
         DoubleT getPrimary() const { return output; }
